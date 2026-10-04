@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIP-Member | Sistem Informasi Parkir Khusus Member</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+              dark: '#0f172a',
+            },
+            accent: {
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              rose: '#ef4444',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom RFID Card Metallic Gradient & Hologram Effect */
+    .rfid-card-bg {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #1e293b 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .rfid-card-bg::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .rfid-chip {
+      background: linear-gradient(135deg, #fbbf24 0%, #d97706 50%, #fef3c7 100%);
+    }
+    /* Animated barrier gate styles */
+    .gate-arm {
+      transform-origin: 12px 12px;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .gate-arm.open {
+      transform: rotate(-75deg);
+    }
+    /* Print Modal Styling */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printReceiptArea, #printReceiptArea * {
+        visibility: visible;
+      }
+      #printReceiptArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- TOP APP HEADER & NAVIGATION -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo & School Project Badge -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-lg text-slate-900 tracking-tight">SIP-Member</span>
+              <span class="text-[10px] font-bold bg-indigo-100 text-brand-700 px-2 py-0.5 rounded-full border border-indigo-200">Fase F • XI RPL 2</span>
+            </div>
+            <p class="text-xs text-slate-500 hidden sm:block">Sistem Informasi Parkir Khusus Member Berlangganan</p>
+          </div>
+        </div>
+
+        <!-- View Switcher Tabs -->
+        <nav class="flex items-center gap-1 sm:gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs sm:text-sm font-medium overflow-x-auto">
+          <button onclick="switchView('public')" id="tab-public" class="nav-tab px-3 py-1.5 rounded-lg transition-all text-brand-700 bg-white shadow-sm font-semibold flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            <span>Publik & Cek Nopol</span>
+          </button>
+          <button onclick="switchView('member')" id="tab-member" class="nav-tab px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"/></svg>
+            <span>Portal Member</span>
+          </button>
+          <button onclick="switchView('admin')" id="tab-admin" class="nav-tab px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>Admin & Kasir</span>
+          </button>
+          <button onclick="switchView('gate')" id="tab-gate" class="nav-tab px-3 py-1.5 rounded-lg transition-all text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <span>Simulator Gerbang</span>
+          </button>
+          <button onclick="switchView('tokens')" id="tab-tokens" class="nav-tab px-3 py-1.5 rounded-lg transition-all text-purple-700 bg-purple-50 hover:bg-purple-100 flex items-center gap-1.5">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            <span>Design Tokens</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================= -->
+  <!-- VIEW 1: PUBLIC LANDING PAGE & QUICK STATUS CHECK             -->
+  <!-- ============================================================= -->
+  <main id="view-public" class="view-content flex-1">
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-b from-indigo-900 via-slate-900 to-slate-950 text-white pt-16 pb-24 px-4 sm:px-6 relative overflow-hidden">
+      <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#4f46e5_1px,transparent_1px)] [background-size:16px_16px]"></div>
+      
+      <div class="max-w-5xl mx-auto text-center relative z-10">
+        <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 mb-6">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          Sistem Parkir Berlangganan Otomatis RFID / QR Code
+        </span>
+        <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight mb-6">
+          Parkir Bebas Ribet,<br>
+          <span class="bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-emerald-300 to-teal-200">
+            Tanpa Antre Tiket Kertas
+          </span>
+        </h1>
+        <p class="text-slate-300 text-base sm:text-lg max-w-2xl mx-auto mb-10 leading-relaxed">
+          Nikmati akses masuk-keluar gerbang otomatis hitungan detik. Cek masa berlaku langganan Anda secara instan atau daftarkan kendaraan baru hari ini.
+        </p>
+
+        <!-- Quick Status Check Card -->
+        <div class="bg-white/10 backdrop-blur-xl border border-white/20 p-4 sm:p-6 rounded-2xl max-w-xl mx-auto shadow-2xl">
+          <div class="text-left mb-3">
+            <label class="text-xs uppercase tracking-wider text-slate-300 font-semibold flex items-center gap-1.5">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              Cek Cepat Status Masa Berlaku Member
+            </label>
+          </div>
+          <form onsubmit="handleQuickCheck(event)" class="flex flex-col sm:flex-row gap-2">
+            <input 
+              type="text" 
+              id="quickCheckInput" 
+              placeholder="Masukkan Plat Nomor (Contoh: B 1234 ABC)" 
+              class="flex-1 px-4 py-3 rounded-xl bg-white text-slate-900 placeholder-slate-400 text-sm font-semibold uppercase focus:ring-2 focus:ring-emerald-400 outline-none"
+              required
+            >
+            <button type="submit" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-sm rounded-xl transition shadow-lg shadow-emerald-500/30 flex items-center justify-center gap-2">
+              <span>Cek Status</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+          </form>
+
+          <!-- Quick Check Result Container -->
+          <div id="quickCheckResult" class="hidden mt-4 pt-4 border-t border-white/10 text-left">
+            <!-- Dynamic Injection via JS -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing / Subscription Plans -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 py-16">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900">Pilihan Paket Langganan Member</h2>
+        <p class="text-slate-600 text-sm sm:text-base mt-2">Pilih tarif sesuai jenis kendaraan dengan akses tanpa batas 24/7 di seluruh gerbang khusus member.</p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        <!-- Motor Plan -->
+        <div class="bg-white rounded-2xl border-2 border-slate-200 p-6 sm:p-8 hover:border-brand-500 transition shadow-sm hover:shadow-xl relative flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <span class="text-xs font-bold text-brand-600 uppercase tracking-wider bg-brand-50 px-2.5 py-1 rounded-md">Kendaraan Roda Dua</span>
+                <h3 class="text-2xl font-bold text-slate-900 mt-2">Member Sepeda Motor</h3>
+              </div>
+              <div class="p-3 bg-indigo-50 rounded-xl text-brand-600">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              </div>
+            </div>
+            <div class="mb-6">
+              <span class="text-4xl font-extrabold text-slate-900">Rp 50.000</span>
+              <span class="text-slate-500 text-sm font-medium">/ bulan</span>
+            </div>
+            <ul class="space-y-3 text-sm text-slate-600 mb-8">
+              <li class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                Akses keluar-masuk 24 Jam non-stop
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                Kartu RFID fisik + Virtual QR E-Card
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                Notifikasi pengingat via WhatsApp H-3
+              </li>
+            </ul>
+          </div>
+          <button onclick="openRegisterModal('Motor', 50000)" class="w-full py-3 px-4 bg-slate-900 hover:bg-brand-600 text-white font-semibold rounded-xl transition text-center text-sm shadow-md">
+            Daftar Member Motor
+          </button>
+        </div>
+
+        <!-- Mobil Plan (Featured) -->
+        <div class="bg-white rounded-2xl border-2 border-brand-500 p-6 sm:p-8 hover:border-brand-600 transition shadow-xl relative flex flex-col justify-between">
+          <div class="absolute -top-3 right-6 bg-gradient-to-r from-brand-600 to-indigo-600 text-white text-[11px] font-extrabold uppercase px-3 py-1 rounded-full shadow-md">
+            Paling Populer
+          </div>
+          <div>
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 px-2.5 py-1 rounded-md">Kendaraan Roda Empat</span>
+                <h3 class="text-2xl font-bold text-slate-900 mt-2">Member Mobil</h3>
+              </div>
+              <div class="p-3 bg-emerald-50 rounded-xl text-emerald-600">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+              </div>
+            </div>
+            <div class="mb-6">
+              <span class="text-4xl font-extrabold text-slate-900">Rp 150.000</span>
+              <span class="text-slate-500 text-sm font-medium">/ bulan</span>
+            </div>
+            <ul class="space-y-3 text-sm text-slate-600 mb-8">
+              <li class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                Akses jalur cepat khusus Gerbang Mobil Member
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                Kartu RFID fisik + Virtual QR E-Card
+              </li>
+              <li class="flex items-center gap-2">
+                <svg class="w-5 h-5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                Jaminan ketersediaan slot parkir khusus member
+              </li>
+            </ul>
+          </div>
+          <button onclick="openRegisterModal('Mobil', 150000)" class="w-full py-3 px-4 bg-brand-600 hover:bg-brand-700 text-white font-semibold rounded-xl transition text-center text-sm shadow-lg shadow-brand-500/25">
+            Daftar Member Mobil
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cara Kerja HIPO 3.0 & 4.0 Info -->
+    <section class="bg-slate-100 py-16 border-t border-slate-200">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6">
+        <div class="text-center max-w-xl mx-auto mb-12">
+          <span class="text-xs font-bold text-brand-600 uppercase tracking-wider">Alur Sistem Otomatis</span>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">3 Langkah Mudah Akses Parkir</h2>
+        </div>
+
+        <div class="grid sm:grid-cols-3 gap-6 text-center">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="w-12 h-12 rounded-xl bg-indigo-100 text-brand-600 font-bold flex items-center justify-center mx-auto mb-4 text-lg">1</div>
+            <h3 class="font-bold text-slate-900 mb-2">Tap Kartu / Scan QR</h3>
+            <p class="text-xs text-slate-500">Dekatkan kartu RFID member atau scan QR E-Card digital dari HP pada scanner gerbang.</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 font-bold flex items-center justify-center mx-auto mb-4 text-lg">2</div>
+            <h3 class="font-bold text-slate-900 mb-2">Verifikasi Status Aktif</h3>
+            <p class="text-xs text-slate-500">Sistem memverifikasi status pembayaran. Jika aktif, palang otomatis terbuka seketika.</p>
+          </div>
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 font-bold flex items-center justify-center mx-auto mb-4 text-lg">3</div>
+            <h3 class="font-bold text-slate-900 mb-2">Pencatatan Otomatis</h3>
+            <p class="text-xs text-slate-500">Waktu masuk & keluar tersimpan di database untuk rekap riwayat dan keamanan kendaraan.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+
+  <!-- ============================================================= -->
+  <!-- VIEW 2: PORTAL MEMBER (SELF-SERVICE)                          -->
+  <!-- ============================================================= -->
+  <main id="view-member" class="view-content hidden flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+    <!-- Member Welcome Banner -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8">
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-2xl font-bold text-slate-900" id="portalMemberName">Ahmad Favian</h1>
+          <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-2.5 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Member Aktif
+          </span>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">ID Member: <span class="font-mono font-semibold text-slate-700">MBR-2026-001</span> • Terdaftar sejak 12 Januari 2026</p>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button onclick="openPaymentModal('MBR-2026-001', 'Ahmad Favian')" class="px-4 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs rounded-xl transition flex items-center gap-2 shadow-md shadow-brand-500/20">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Perpanjang Iuran</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Grid Layout: Left Column (Virtual Card & Quick Actions) | Right Column (Vehicles & History) -->
+    <div class="grid lg:grid-cols-3 gap-8">
+      <!-- Left Column: Virtual RFID Card -->
+      <div class="space-y-6">
+        <!-- E-Card Display -->
+        <div class="rfid-card-bg text-white p-6 rounded-3xl shadow-2xl border border-indigo-900/60 aspect-[1.586/1] flex flex-col justify-between relative">
+          <!-- Top Row -->
+          <div class="flex justify-between items-start relative z-10">
+            <div>
+              <span class="text-[10px] tracking-widest uppercase text-indigo-300 font-bold">SIP-Member Digital Access</span>
+              <p class="text-xs text-slate-400 font-medium">Fase F XI RPL 2</p>
+            </div>
+            <div class="flex items-center gap-1.5 bg-white/10 px-2 py-1 rounded-lg backdrop-blur-md">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              <span class="text-[11px] font-bold text-emerald-300">RFID / NFC</span>
+            </div>
+          </div>
+
+          <!-- Middle Row: Chip & Dynamic QR -->
+          <div class="flex items-center justify-between my-2 relative z-10">
+            <!-- Simulated Gold Smart Chip -->
+            <div class="w-11 h-8 rounded-md rfid-chip border border-amber-600/50 shadow-inner flex flex-col justify-around p-1">
+              <div class="h-0.5 bg-amber-800/30 rounded"></div>
+              <div class="h-0.5 bg-amber-800/30 rounded"></div>
+              <div class="h-0.5 bg-amber-800/30 rounded"></div>
+            </div>
+
+            <!-- Dynamic Gate QR Code for Gate Scanner -->
+            <div class="bg-white p-2 rounded-xl shadow-lg flex flex-col items-center">
+              <div class="w-16 h-16 bg-slate-900 rounded flex items-center justify-center p-1">
+                <!-- SVG QR Pattern Representation -->
+                <svg class="w-full h-full text-white" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm10-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm12 2h2v4h-2v-4zm-2-2h2v2h-2v-2zm4 0h2v2h-2v-2zm-2 4h4v2h-4v-2zm-6-2h2v2h-2v-2zm0-2h2v2h-2v-2z"/>
+                </svg>
+              </div>
+              <span class="text-[8px] text-slate-600 font-mono font-bold mt-1">SCAN AT GATE</span>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Plate, Name, and Expiration -->
+          <div class="relative z-10">
+            <div class="flex justify-between items-end">
+              <div>
+                <p class="text-[10px] text-indigo-300 uppercase tracking-wider font-semibold">Nomor Plat Utama</p>
+                <p class="font-mono text-xl font-black tracking-wider text-white">B 1234 ABC</p>
+                <p class="text-xs text-slate-300 mt-0.5 font-medium">Ahmad Favian</p>
+              </div>
+              <div class="text-right">
+                <p class="text-[9px] text-indigo-300 uppercase font-semibold">Masa Berlaku S/D</p>
+                <p class="text-xs font-mono font-bold text-emerald-300" id="portalCardExpiry">20 Nov 2026</p>
+                <span class="inline-block text-[9px] bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-500/30 mt-0.5">
+                  Sisa 61 Hari
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Info Card -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+            <svg class="w-4 h-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Status Parkir Saat Ini
+          </h3>
+          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <span class="text-xs text-slate-600">Posisi Kendaraan:</span>
+            <span class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+              Di Luar Area (Out)
+            </span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+            <span class="text-xs text-slate-600">Tarif Bulanan:</span>
+            <span class="text-xs font-bold text-brand-600">Rp 150.000 / bln (Mobil)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Registered Vehicles & Parking Logs -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Registered Vehicles (1 : N Relationship from ERD) -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h2 class="text-base font-bold text-slate-900">Kendaraan Terdaftar (Relasi 1:N)</h2>
+              <p class="text-xs text-slate-500">Satu member dapat memiliki lebih dari satu kendaraan (Mobil / Motor).</p>
+            </div>
+            <button onclick="alert('Form tambah kendaraan baru siap diverifikasi kasir.')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition flex items-center gap-1">
+              <span>+ Tambah Plat</span>
+            </button>
+          </div>
+
+          <div class="grid sm:grid-cols-2 gap-4">
+            <!-- Vehicle 1 -->
+            <div class="p-4 rounded-xl border border-indigo-200 bg-indigo-50/50 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-indigo-600 text-white flex items-center justify-center">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-mono font-black text-slate-900 text-sm">B 1234 ABC</span>
+                    <span class="text-[10px] bg-brand-600 text-white font-semibold px-1.5 py-0.2 rounded">Utama</span>
+                  </div>
+                  <p class="text-xs text-slate-500">Mobil • Honda HR-V (Hitam)</p>
+                </div>
+              </div>
+              <span class="text-emerald-600 font-bold text-xs bg-emerald-100 px-2 py-1 rounded-md">Aktif</span>
+            </div>
+
+            <!-- Vehicle 2 -->
+            <div class="p-4 rounded-xl border border-slate-200 bg-white flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-lg bg-slate-700 text-white flex items-center justify-center">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <div>
+                  <span class="font-mono font-black text-slate-900 text-sm">B 5678 XYZ</span>
+                  <p class="text-xs text-slate-500">Motor • Yamaha NMAX (Abu-abu)</p>
+                </div>
+              </div>
+              <span class="text-emerald-600 font-bold text-xs bg-emerald-100 px-2 py-1 rounded-md">Aktif</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Parking History Table (HIPO 5.2 / Transaksi Parkir Log) -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <div class="flex justify-between items-center mb-4">
+            <div>
+              <h2 class="text-base font-bold text-slate-900">Riwayat Sesi Parkir (Entitas Transaksi)</h2>
+              <p class="text-xs text-slate-500">Catatan keluar-masuk palang otomatis via RFID/QR.</p>
+            </div>
+            <span class="text-xs text-slate-400">Menampilkan 4 data terakhir</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-50 text-slate-500 border-y border-slate-200">
+                <tr>
+                  <th class="py-3 px-3">Waktu Masuk</th>
+                  <th class="py-3 px-3">Waktu Keluar</th>
+                  <th class="py-3 px-3">Plat Kendaraan</th>
+                  <th class="py-3 px-3">Gerbang</th>
+                  <th class="py-3 px-3">Durasi</th>
+                  <th class="py-3 px-3">Status</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100 font-medium text-slate-700" id="memberHistoryTable">
+                <tr>
+                  <td class="py-3 px-3">20 Sep 2026, 07:45</td>
+                  <td class="py-3 px-3">20 Sep 2026, 12:15</td>
+                  <td class="py-3 px-3 font-mono font-bold">B 1234 ABC</td>
+                  <td class="py-3 px-3">G-IN-01 / G-OUT-01</td>
+                  <td class="py-3 px-3">4 Jam 30 Mnt</td>
+                  <td class="py-3 px-3"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">Selesai</span></td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-3">19 Sep 2026, 08:00</td>
+                  <td class="py-3 px-3">19 Sep 2026, 17:10</td>
+                  <td class="py-3 px-3 font-mono font-bold">B 1234 ABC</td>
+                  <td class="py-3 px-3">G-IN-01 / G-OUT-02</td>
+                  <td class="py-3 px-3">9 Jam 10 Mnt</td>
+                  <td class="py-3 px-3"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">Selesai</span></td>
+                </tr>
+                <tr>
+                  <td class="py-3 px-3">18 Sep 2026, 09:12</td>
+                  <td class="py-3 px-3">18 Sep 2026, 14:30</td>
+                  <td class="py-3 px-3 font-mono font-bold">B 5678 XYZ</td>
+                  <td class="py-3 px-3">G-IN-02 / G-OUT-02</td>
+                  <td class="py-3 px-3">5 Jam 18 Mnt</td>
+                  <td class="py-3 px-3"><span class="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[10px] font-bold">Selesai</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- ============================================================= -->
+  <!-- VIEW 3: DASBOR ADMIN & KASIR (HIPO 1.0, 2.0, 5.0)             -->
+  <!-- ============================================================= -->
+  <main id="view-admin" class="view-content hidden flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+    <!-- Section Title & Role Indicator -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-2xl font-bold text-slate-900">Dasbor Kasir & Administrasi Parkir</h1>
+          <span class="text-xs bg-brand-100 text-brand-800 font-bold px-2 py-0.5 rounded border border-brand-200">Kasir: Siti Nurhaliza</span>
+        </div>
+        <p class="text-xs text-slate-500">Kelola Data Member (HIPO 1.0), Pembayaran Iuran (HIPO 2.0), dan Rekap Laporan (HIPO 5.0).</p>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-2">
+        <button onclick="openRegisterModal('Mobil', 150000)" class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs rounded-xl transition flex items-center gap-1.5 shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+          <span>+ Member Baru (1.1)</span>
+        </button>
+        <button onclick="openPaymentModal('MBR-2026-001', 'Ahmad Favian')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl transition flex items-center gap-1.5 shadow-sm">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+          <span>Input Bayar Iuran (2.2)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary KPI Cards (HIPO 5.0) -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <span class="text-xs text-slate-500 font-medium">Total Member Aktif</span>
+        <div class="flex items-baseline justify-between mt-2">
+          <span class="text-2xl font-bold text-slate-900" id="statActiveMembers">142</span>
+          <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">+12 bln ini</span>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <span class="text-xs text-slate-500 font-medium">Slot Member Terisi</span>
+        <div class="flex items-baseline justify-between mt-2">
+          <span class="text-2xl font-bold text-indigo-600">38 / 60</span>
+          <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">63% Okupansi</span>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <span class="text-xs text-slate-500 font-medium">Iuran Masuk (Bulan Ini)</span>
+        <div class="flex items-baseline justify-between mt-2">
+          <span class="text-xl sm:text-2xl font-bold text-emerald-600">Rp 18.250.000</span>
+          <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">+8.4%</span>
+        </div>
+      </div>
+      <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <span class="text-xs text-slate-500 font-medium">Kadaluarsa (Perlu Follow-up)</span>
+        <div class="flex items-baseline justify-between mt-2">
+          <span class="text-2xl font-bold text-rose-600">5</span>
+          <span class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded">Segera Hubungi</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Data Table: Kelola Data Member (HIPO 1.0) -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-8">
+      <div class="p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Manajemen Data Member & Kendaraan (HIPO 1.0)</h2>
+          <p class="text-xs text-slate-500">Daftar entitas MEMBER dan KENDARAAN terdaftar.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="text" id="adminSearchInput" onkeyup="filterAdminTable()" placeholder="Cari nama atau plat nopol..." class="text-xs px-3 py-2 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-brand-500 w-48 sm:w-64">
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs" id="adminMembersTable">
+          <thead class="bg-slate-50 text-slate-500 border-b border-slate-200 font-semibold">
+            <tr>
+              <th class="py-3 px-4">ID Member</th>
+              <th class="py-3 px-4">Nama Lengkap</th>
+              <th class="py-3 px-4">Kendaraan / Plat</th>
+              <th class="py-3 px-4">Tgl Jatuh Tempo</th>
+              <th class="py-3 px-4">Status</th>
+              <th class="py-3 px-4 text-center">Aksi (HIPO 1.3 & 2.2)</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 font-medium text-slate-700" id="adminTableBody">
+            <!-- Row 1: Ahmad Favian -->
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 font-mono font-bold text-brand-700">MBR-2026-001</td>
+              <td class="py-3 px-4">
+                <div class="font-bold text-slate-900">Ahmad Favian</div>
+                <div class="text-[11px] text-slate-400">0812-3456-7890</div>
+              </td>
+              <td class="py-3 px-4">
+                <span class="font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">B 1234 ABC</span>
+                <span class="text-slate-400 text-[11px] ml-1">(Mobil)</span>
+              </td>
+              <td class="py-3 px-4 font-mono text-emerald-600 font-semibold member-row-expiry">2026-11-20</td>
+              <td class="py-3 px-4">
+                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Aktif</span>
+              </td>
+              <td class="py-3 px-4 text-center">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button onclick="openPaymentModal('MBR-2026-001', 'Ahmad Favian')" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-brand-700 rounded font-semibold text-[11px]">
+                    + Iuran
+                  </button>
+                  <button onclick="toggleMemberStatus(this)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[11px]">
+                    Ubah
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 2: Siti Rahmawati -->
+            <tr class="hover:bg-slate-50 transition">
+              <td class="py-3 px-4 font-mono font-bold text-brand-700">MBR-2026-002</td>
+              <td class="py-3 px-4">
+                <div class="font-bold text-slate-900">Siti Rahmawati</div>
+                <div class="text-[11px] text-slate-400">0857-1122-3344</div>
+              </td>
+              <td class="py-3 px-4">
+                <span class="font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">D 8888 SITI</span>
+                <span class="text-slate-400 text-[11px] ml-1">(Mobil)</span>
+              </td>
+              <td class="py-3 px-4 font-mono text-emerald-600 font-semibold member-row-expiry">2026-10-15</td>
+              <td class="py-3 px-4">
+                <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Aktif</span>
+              </td>
+              <td class="py-3 px-4 text-center">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button onclick="openPaymentModal('MBR-2026-002', 'Siti Rahmawati')" class="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-brand-700 rounded font-semibold text-[11px]">
+                    + Iuran
+                  </button>
+                  <button onclick="toggleMemberStatus(this)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[11px]">
+                    Ubah
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Row 3: Budi Santoso (Kadaluarsa) -->
+            <tr class="hover:bg-slate-50 transition bg-rose-50/30">
+              <td class="py-3 px-4 font-mono font-bold text-brand-700">MBR-2026-003</td>
+              <td class="py-3 px-4">
+                <div class="font-bold text-slate-900">Budi Santoso</div>
+                <div class="text-[11px] text-slate-400">0813-9988-7766</div>
+              </td>
+              <td class="py-3 px-4">
+                <span class="font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">B 9999 EXP</span>
+                <span class="text-slate-400 text-[11px] ml-1">(Motor)</span>
+              </td>
+              <td class="py-3 px-4 font-mono text-rose-600 font-semibold member-row-expiry">2026-08-01</td>
+              <td class="py-3 px-4">
+                <span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Kedaluwarsa</span>
+              </td>
+              <td class="py-3 px-4 text-center">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button onclick="openPaymentModal('MBR-2026-003', 'Budi Santoso')" class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded font-bold text-[11px]">
+                    Perpanjang
+                  </button>
+                  <button onclick="toggleMemberStatus(this)" class="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[11px]">
+                    Ubah
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Laporan & Rekap Keuangan Bulanan (HIPO 5.1) -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Laporan Rekap Pembayaran Iuran Bulanan (HIPO 5.1)</h2>
+          <p class="text-xs text-slate-500">Data penerimaan kas iuran parkir per periode.</p>
+        </div>
+        <button onclick="alert('Laporan berhasil diexport ke format Excel (.xlsx)')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition flex items-center gap-1 self-start sm:self-auto">
+          <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          <span>Export Rekap (XLSX)</span>
+        </button>
+      </div>
+
+      <!-- Financial Bar Chart Visualization -->
+      <div class="space-y-3">
+        <div>
+          <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+            <span>September 2026 (Bulan Berjalan)</span>
+            <span>Rp 18.250.000 / Target Rp 20.000.000 (91%)</span>
+          </div>
+          <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+            <div class="bg-emerald-500 h-full rounded-full" style="width: 91%"></div>
+          </div>
+        </div>
+        <div>
+          <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+            <span>Agustus 2026</span>
+            <span>Rp 19.800.000 (Selesai)</span>
+          </div>
+          <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+            <div class="bg-brand-600 h-full rounded-full" style="width: 99%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- ============================================================= -->
+  <!-- VIEW 4: SIMULATOR GERBANG PARKIR (HIPO 3.0 & 4.0)             -->
+  <!-- ============================================================= -->
+  <main id="view-gate" class="view-content hidden flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+    <!-- Header -->
+    <div class="text-center max-w-2xl mx-auto mb-8">
+      <span class="text-xs font-bold text-brand-600 uppercase tracking-wider bg-brand-50 px-2.5 py-1 rounded-md">
+        Simulasi Real-time Hardware Gate (IoT)
+      </span>
+      <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-2">Simulator Gerbang Masuk & Keluar</h1>
+      <p class="text-xs sm:text-sm text-slate-600 mt-1">
+        Uji coba validasi logika HIPO 3.0 (Kelola Masuk) & HIPO 4.0 (Kelola Keluar) secara interaktif dengan palang pintu otomatis.
+      </p>
+    </div>
+
+    <!-- Two Gate Simulators Side-by-Side -->
+    <div class="grid lg:grid-cols-2 gap-8">
+      
+      <!-- GATE IN (HIPO 3.0) -->
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden flex flex-col justify-between">
+        <div class="p-6 bg-slate-900 text-white">
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+              <h2 class="text-lg font-bold">Gerbang Masuk (GATE-IN-01)</h2>
+            </div>
+            <span class="text-[11px] bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded border border-slate-700">HIPO 3.0</span>
+          </div>
+          <p class="text-xs text-slate-400">Verifikasi kartu RFID/QR sebelum palang terbuka.</p>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Gate Visual Canvas with Palang Arm Animation -->
+          <div class="bg-slate-950 rounded-2xl p-6 relative overflow-hidden border border-slate-800 flex flex-col items-center justify-center min-h-[220px]">
+            <!-- Overhead LED Sign -->
+            <div id="gateInDisplay" class="bg-black/90 border-2 border-slate-700 text-emerald-400 font-mono text-center px-4 py-2 rounded-xl text-sm font-black tracking-wider shadow-inner mb-6 w-full max-w-xs transition-all">
+              [ STANDBY : TEMPEL KARTU ]
+            </div>
+
+            <!-- Palang Gate SVG Animation -->
+            <div class="relative w-72 h-28 flex items-end justify-center">
+              <!-- Gate Housing Post -->
+              <div class="w-12 h-24 bg-gradient-to-r from-amber-500 to-amber-600 rounded-t-lg shadow-2xl relative z-20 flex flex-col items-center justify-start pt-2">
+                <div class="w-3 h-3 rounded-full bg-slate-900 mb-2"></div>
+                <!-- Pivot screw -->
+                <div class="w-4 h-4 rounded-full bg-slate-800 border-2 border-white"></div>
+              </div>
+
+              <!-- Palang Arm (SVG Striped Barrier) -->
+              <div id="gateInArm" class="gate-arm absolute left-32 bottom-12 w-56 h-4 bg-white border border-slate-400 rounded-r-md z-10 overflow-hidden shadow-lg" style="background: repeating-linear-gradient(45deg, #ef4444, #ef4444 14px, #ffffff 14px, #ffffff 28px);">
+              </div>
+
+              <!-- Car Silhouette Representation -->
+              <div id="gateInCar" class="absolute left-6 bottom-0 text-slate-500 opacity-60 transition-all duration-700">
+                <svg class="w-20 h-14" fill="currentColor" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.08 3.11H5.77L6.85 7zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Simulation Interactive Controls -->
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+            <label class="text-xs font-bold text-slate-700 block">Pilih Contoh Skenario Tap Masuk:</label>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="simulateGateIn('valid')" class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl transition flex flex-col items-center text-center shadow-sm">
+                <span>Member Aktif (B 1234 ABC)</span>
+                <span class="text-[10px] text-emerald-200 font-normal">Palang Buka (Sukses)</span>
+              </button>
+              <button onclick="simulateGateIn('expired')" class="px-3 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-xl transition flex flex-col items-center text-center shadow-sm">
+                <span>Member Kadaluarsa (B 9999 EXP)</span>
+                <span class="text-[10px] text-rose-200 font-normal">Palang Ditolak (Error)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- GATE OUT (HIPO 4.0) -->
+      <div class="bg-white rounded-3xl border border-slate-200 shadow-xl overflow-hidden flex flex-col justify-between">
+        <div class="p-6 bg-slate-900 text-white">
+          <div class="flex justify-between items-center mb-2">
+            <div class="flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-indigo-400 animate-ping"></span>
+              <h2 class="text-lg font-bold">Gerbang Keluar (GATE-OUT-01)</h2>
+            </div>
+            <span class="text-[11px] bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded border border-slate-700">HIPO 4.0</span>
+          </div>
+          <p class="text-xs text-slate-400">Validasi sesi parkir dan selesaikan transaksi.</p>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Gate Visual Canvas with Palang Arm Animation -->
+          <div class="bg-slate-950 rounded-2xl p-6 relative overflow-hidden border border-slate-800 flex flex-col items-center justify-center min-h-[220px]">
+            <!-- Overhead LED Sign -->
+            <div id="gateOutDisplay" class="bg-black/90 border-2 border-slate-700 text-indigo-400 font-mono text-center px-4 py-2 rounded-xl text-sm font-black tracking-wider shadow-inner mb-6 w-full max-w-xs transition-all">
+              [ STANDBY : SCAN KELUAR ]
+            </div>
+
+            <!-- Palang Gate SVG Animation -->
+            <div class="relative w-72 h-28 flex items-end justify-center">
+              <!-- Gate Housing Post -->
+              <div class="w-12 h-24 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-t-lg shadow-2xl relative z-20 flex flex-col items-center justify-start pt-2">
+                <div class="w-3 h-3 rounded-full bg-slate-900 mb-2"></div>
+                <!-- Pivot screw -->
+                <div class="w-4 h-4 rounded-full bg-slate-800 border-2 border-white"></div>
+              </div>
+
+              <!-- Palang Arm (SVG Striped Barrier) -->
+              <div id="gateOutArm" class="gate-arm absolute left-32 bottom-12 w-56 h-4 bg-white border border-slate-400 rounded-r-md z-10 overflow-hidden shadow-lg" style="background: repeating-linear-gradient(45deg, #4f46e5, #4f46e5 14px, #ffffff 14px, #ffffff 28px);">
+              </div>
+
+              <!-- Car Silhouette Representation -->
+              <div id="gateOutCar" class="absolute left-6 bottom-0 text-slate-500 opacity-60 transition-all duration-700">
+                <svg class="w-20 h-14" fill="currentColor" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.08 3.11H5.77L6.85 7zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Simulation Interactive Controls -->
+          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3">
+            <label class="text-xs font-bold text-slate-700 block">Simulasi Tap Keluar:</label>
+            <button onclick="simulateGateOut('B 1234 ABC')" class="w-full px-3 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-xl transition flex flex-col items-center text-center shadow-sm">
+              <span>Tap Keluar: B 1234 ABC</span>
+              <span class="text-[10px] text-indigo-200 font-normal">Hitung durasi & Buka Palang Keluar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-time Live Gate Logs (HIPO 3.3 & 4.3) -->
+    <div class="mt-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Real-time Gate Access Activity (HIPO 3.3 & 4.3)</h2>
+          <p class="text-xs text-slate-500">Log sistem otomatis saat sensor mendeteksi RFID atau plat nomor.</p>
+        </div>
+        <button onclick="clearGateLogs()" class="text-xs text-slate-400 hover:text-slate-600">Bersihkan Log</button>
+      </div>
+
+      <div class="bg-slate-900 rounded-xl p-4 font-mono text-xs text-slate-300 space-y-2 max-h-48 overflow-y-auto" id="gateLiveLogs">
+        <div class="text-emerald-400">[2026-09-20 12:40:01] GATE-IN-01 : Sensor Ready. Database sync OK.</div>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- ============================================================= -->
+  <!-- VIEW 5: DESIGN TOKENS & FIGMA EXPORT GUIDE                    -->
+  <!-- ============================================================= -->
+  <main id="view-tokens" class="view-content hidden flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+    <div class="text-center max-w-2xl mx-auto mb-10">
+      <span class="text-xs font-bold text-purple-700 uppercase tracking-wider bg-purple-100 px-3 py-1 rounded-full">
+        Design System Specification
+      </span>
+      <h1 class="text-3xl font-bold text-slate-900 mt-2">Design Tokens & Panduan Figma</h1>
+      <p class="text-sm text-slate-600 mt-1">
+        Gunakan spesifikasi warna, tipografi, dan panduan 1-klik impor ke Figma berikut untuk nilai tugas LKPD yang maksimal.
+      </p>
+    </div>
+
+    <!-- Figma 1-Click Import Guide Card -->
+    <div class="bg-gradient-to-r from-purple-900 to-indigo-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl mb-10">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div>
+          <span class="text-xs font-bold text-purple-300 uppercase tracking-wider">Langkah Termudah & 100% Asli Figma</span>
+          <h2 class="text-2xl font-bold mt-1">Cara Impor Seluruh Desain Ini ke Kanvas Figma</h2>
+          <p class="text-sm text-purple-200 mt-2 max-w-2xl leading-relaxed">
+            1. Buka Figma di browser atau desktop app.<br>
+            2. Install & jalankan plugin gratis <b>html.to.design</b>.<br>
+            3. Salin URL berkas HTML ini atau gunakan opsi <i>Upload HTML File</i>.<br>
+            4. Klik <b>Import</b> — Seluruh halaman ini akan langsung menjadi <b>Frame, Auto-layout, Vektor, dan Teks yang dapat diedit</b> di Figma!
+          </p>
+        </div>
+        <a href="https://www.figma.com/community/plugin/1159123024924461424/html-to-design" target="_blank" class="px-6 py-3 bg-white text-purple-900 font-bold rounded-xl text-sm shadow-lg hover:bg-purple-50 transition whitespace-nowrap">
+          Buka Plugin Figma &rarr;
+        </a>
+      </div>
+    </div>
+
+    <!-- Color Palette Tokens -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-8">
+      <h2 class="text-lg font-bold text-slate-900 mb-4">Palet Warna Resmi SIP-Member</h2>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <!-- Brand Primary -->
+        <div class="space-y-2">
+          <div class="h-20 rounded-xl bg-[#4f46e5] shadow-inner flex items-end p-2 text-white font-mono text-xs font-bold">#4F46E5</div>
+          <div>
+            <p class="font-bold text-xs text-slate-900">Primary Brand</p>
+            <p class="text-[11px] text-slate-500">Tombol aksi utama, navbar, kartu member</p>
+          </div>
+        </div>
+
+        <!-- Success Emerald -->
+        <div class="space-y-2">
+          <div class="h-20 rounded-xl bg-[#10b981] shadow-inner flex items-end p-2 text-white font-mono text-xs font-bold">#10B981</div>
+          <div>
+            <p class="font-bold text-xs text-slate-900">Success / Active</p>
+            <p class="text-[11px] text-slate-500">Status aktif, palang terbuka, bayar lunas</p>
+          </div>
+        </div>
+
+        <!-- Danger Rose -->
+        <div class="space-y-2">
+          <div class="h-20 rounded-xl bg-[#ef4444] shadow-inner flex items-end p-2 text-white font-mono text-xs font-bold">#EF4444</div>
+          <div>
+            <p class="font-bold text-xs text-slate-900">Danger / Expired</p>
+            <p class="text-[11px] text-slate-500">Masa aktif habis, akses palang ditolak</p>
+          </div>
+        </div>
+
+        <!-- Slate Dark -->
+        <div class="space-y-2">
+          <div class="h-20 rounded-xl bg-[#0f172a] shadow-inner flex items-end p-2 text-white font-mono text-xs font-bold">#0F172A</div>
+          <div>
+            <p class="font-bold text-xs text-slate-900">Dark / Slate-900</p>
+            <p class="text-[11px] text-slate-500">Background hero, display gate, teks utama</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Component Mapping Table to HIPO & ERD -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <h2 class="text-lg font-bold text-slate-900 mb-4">Pemetaan Komponen UI ke Dokumen LKPD (Kelompok 2)</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-50 text-slate-600 border-b border-slate-200 font-semibold">
+            <tr>
+              <th class="py-3 px-3">Modul UI</th>
+              <th class="py-3 px-3">Proses HIPO Terkait</th>
+              <th class="py-3 px-3">Entitas ERD yang Digunakan</th>
+              <th class="py-3 px-3">Fungsi Utama</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-700">
+            <tr>
+              <td class="py-3 px-3 font-semibold text-brand-600">Quick Check Plat</td>
+              <td class="py-3 px-3">2.1 Cek Tagihan & Masa Berlaku</td>
+              <td class="py-3 px-3 font-mono">MEMBER, KENDARAAN</td>
+              <td class="py-3 px-3">Memvalidasi apakah nopol masih dalam masa langganan aktif.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-3 font-semibold text-brand-600">Portal Member E-Card</td>
+              <td class="py-3 px-3">1.0 & 2.0 Kelola Member & Iuran</td>
+              <td class="py-3 px-3 font-mono">MEMBER, KENDARAAN, PEMBAYARAN</td>
+              <td class="py-3 px-3">Kartu akses digital dengan barcode/QR dan hitung mundur jatuh tempo.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-3 font-semibold text-brand-600">Form Bayar Kasir</td>
+              <td class="py-3 px-3">2.2 & 2.4 Input & Cetak Kuitansi</td>
+              <td class="py-3 px-3 font-mono">PEMBAYARAN, PETUGAS</td>
+              <td class="py-3 px-3">Mencatat penerimaan iuran dan menerbitkan bukti bayar resmi.</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-3 font-semibold text-brand-600">Simulator Gerbang Masuk</td>
+              <td class="py-3 px-3">3.0 Kelola Parkir Masuk</td>
+              <td class="py-3 px-3 font-mono">TRANSAKSI_PARKIR, KENDARAAN</td>
+              <td class="py-3 px-3">Mengecek masa berlaku member & membuka palang masuk (trigger signal).</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-3 font-semibold text-brand-600">Simulator Gerbang Keluar</td>
+              <td class="py-3 px-3">4.0 Kelola Parkir Keluar</td>
+              <td class="py-3 px-3 font-mono">TRANSAKSI_PARKIR</td>
+              <td class="py-3 px-3">Validasi sesi parkir selesai dan membuka palang keluar.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- ============================================================= -->
+  <!-- MODAL: PEMBAYARAN IURAN & CETAK KUITANSI (HIPO 2.2 & 2.4)     -->
+  <!-- ============================================================= -->
+  <div id="paymentModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+        <div>
+          <h3 class="font-bold text-slate-900 text-lg">Input Pembayaran Iuran (HIPO 2.2)</h3>
+          <p class="text-xs text-slate-500">Perpanjangan masa aktif kartu member parkir.</p>
+        </div>
+        <button onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form onsubmit="handleProcessPayment(event)" class="p-6 space-y-4">
+        <div>
+          <label class="text-xs font-bold text-slate-700 block mb-1">Nama Member</label>
+          <input type="text" id="payMemberName" readonly class="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-sm font-semibold text-slate-700">
+          <input type="hidden" id="payMemberId">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-slate-700 block mb-1">Durasi Perpanjangan</label>
+            <select id="payDurationMonths" onchange="calculatePayTotal()" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-brand-500 outline-none">
+              <option value="1">1 Bulan</option>
+              <option value="3">3 Bulan</option>
+              <option value="6">6 Bulan</option>
+              <option value="12">12 Bulan (1 Tahun)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-700 block mb-1">Metode Pembayaran</label>
+            <select id="payMethod" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-brand-500 outline-none">
+              <option value="QRIS">QRIS Instan</option>
+              <option value="Transfer VA">Transfer Virtual Account</option>
+              <option value="Tunai / Kasir">Tunai (Kasir)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex justify-between items-center">
+          <div>
+            <span class="text-xs text-indigo-700 font-medium">Total Tagihan:</span>
+            <div class="text-xl font-extrabold text-brand-700" id="payTotalAmountDisplay">Rp 150.000</div>
+          </div>
+          <span class="text-[11px] bg-indigo-200/60 text-brand-800 font-bold px-2 py-1 rounded">Mobil (Rp 150k/bln)</span>
+        </div>
+
+        <div class="pt-2 flex gap-2">
+          <button type="button" onclick="closePaymentModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">
+            Batal
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span>Simpan & Cetak Kuitansi</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ============================================================= -->
+  <!-- MODAL: KUITANSI RESMI (HIPO 2.4 - Cetak Kuitansi)             -->
+  <!-- ============================================================= -->
+  <div id="receiptModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+      <!-- Receipt Printable Area -->
+      <div id="printReceiptArea" class="p-6">
+        <!-- Header -->
+        <div class="text-center border-b-2 border-dashed border-slate-200 pb-4 mb-4">
+          <div class="w-10 h-10 rounded-xl bg-brand-600 text-white font-bold flex items-center justify-center mx-auto mb-2 text-sm">
+            SIP
+          </div>
+          <h2 class="font-black text-slate-900 text-base">SIP-MEMBER PARKING</h2>
+          <p class="text-[11px] text-slate-500">Gedung Pusat Parkir Terpadu • Kelompok 2 XI RPL 2</p>
+          <div class="inline-block bg-emerald-100 text-emerald-800 text-[10px] font-bold px-3 py-0.5 rounded-full mt-2 uppercase tracking-wider border border-emerald-300">
+            Bukti Pembayaran Lunas
+          </div>
+        </div>
+
+        <!-- Receipt Metadata -->
+        <div class="space-y-2 text-xs text-slate-600 border-b-2 border-dashed border-slate-200 pb-4 mb-4">
+          <div class="flex justify-between">
+            <span>No. Transaksi:</span>
+            <span class="font-mono font-bold text-slate-900" id="recId">TRX-2026-9912</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Waktu Pembayaran:</span>
+            <span class="font-mono font-semibold" id="recDate">20 Sep 2026, 12:45 WIB</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Nama Member:</span>
+            <span class="font-bold text-slate-900" id="recMember">Ahmad Favian</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Nomor Plat Utama:</span>
+            <span class="font-mono font-bold bg-slate-100 px-1.5 py-0.5 rounded" id="recPlate">B 1234 ABC</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Masa Aktif Baru S/D:</span>
+            <span class="font-mono font-black text-emerald-600" id="recNewExpiry">20 Des 2026</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Petugas Kasir:</span>
+            <span>Siti Nurhaliza (KSR-01)</span>
+          </div>
+        </div>
+
+        <!-- Total -->
+        <div class="flex justify-between items-center pt-1 mb-6">
+          <span class="text-sm font-bold text-slate-900">Total Dibayar:</span>
+          <span class="text-xl font-extrabold text-brand-600 font-mono" id="recTotal">Rp 150.000</span>
+        </div>
+
+        <p class="text-[10px] text-center text-slate-400 italic">
+          Simpan kuitansi digital ini sebagai bukti sah keanggotaan parkir. Terima kasih telah berlangganan!
+        </p>
+      </div>
+
+      <!-- Action Footer -->
+      <div class="p-4 bg-slate-50 border-t border-slate-200 flex gap-2">
+        <button onclick="closeReceiptModal()" class="flex-1 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition">
+          Tutup
+        </button>
+        <button onclick="window.print()" class="flex-1 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs rounded-xl transition flex items-center justify-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          <span>Cetak Bukti</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================= -->
+  <!-- MODAL: DAFTAR MEMBER BARU (HIPO 1.1)                          -->
+  <!-- ============================================================= -->
+  <div id="registerModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
+      <div class="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+        <div>
+          <h3 class="font-bold text-slate-900 text-lg">Pendaftaran Member Baru (HIPO 1.1)</h3>
+          <p class="text-xs text-slate-500">Registrasi identitas dan plat kendaraan ke database.</p>
+        </div>
+        <button onclick="closeRegisterModal()" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <form onsubmit="handleNewRegistration(event)" class="p-6 space-y-3">
+        <div>
+          <label class="text-xs font-bold text-slate-700 block mb-1">Nama Lengkap Member</label>
+          <input type="text" id="regName" placeholder="Contoh: Rian Pratama" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-slate-700 block mb-1">Nomor Telepon / WA</label>
+            <input type="tel" id="regPhone" placeholder="0812xxxxxxxx" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-700 block mb-1">Jenis Kendaraan</label>
+            <select id="regType" class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+              <option value="Mobil">Mobil (Rp 150.000/bln)</option>
+              <option value="Motor">Motor (Rp 50.000/bln)</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-slate-700 block mb-1">Nomor Plat (PK)</label>
+            <input type="text" id="regPlate" placeholder="Contoh: B 2345 DEF" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm font-mono font-bold uppercase focus:ring-2 focus:ring-brand-500 outline-none">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-700 block mb-1">Merk / Tipe Kendaraan</label>
+            <input type="text" id="regBrand" placeholder="Contoh: Toyota Avanza" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+          </div>
+        </div>
+
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-500 flex items-center gap-2">
+          <svg class="w-4 h-4 text-brand-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span>Masa aktif awal langsung aktif 30 hari sejak pendaftaran disetujui.</span>
+        </div>
+
+        <div class="pt-3 flex gap-2">
+          <button type="button" onclick="closeRegisterModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">
+            Batal
+          </button>
+          <button type="submit" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-semibold text-xs rounded-xl transition shadow-md">
+            Daftarkan Member
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ============================================================= -->
+  <!-- FOOTER                                                        -->
+  <!-- ============================================================= -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-xs text-slate-500 text-center">
+    <div class="max-w-7xl mx-auto px-4">
+      <p class="font-medium text-slate-700">Tugas Proyek Perancangan HIPO dan ERD • Mata Pelajaran Pemrograman / Sistem</p>
+      <p class="mt-1">Fase F – Kelas XI RPL 2 • Kelompok 2: Sistem Informasi Parkir Member Berlangganan (SIP-Member)</p>
+      <p class="mt-0.5 text-slate-400">Guru Pengampu: Bu Fadillah</p>
+    </div>
+  </footer>
+
+  <!-- ============================================================= -->
+  <!-- JAVASCRIPT LOGIC (Interactive Prototype)                       -->
+  <!-- ============================================================= -->
+  <script>
+    // Tab View Switcher
+    function switchView(viewName) {
+      document.querySelectorAll('.view-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-tab').forEach(el => {
+        el.classList.remove('text-brand-700', 'bg-white', 'shadow-sm', 'font-semibold');
+        el.classList.add('text-slate-600');
+      });
+
+      const activeView = document.getElementById('view-' + viewName);
+      const activeTab = document.getElementById('tab-' + viewName);
+
+      if (activeView) activeView.classList.remove('hidden');
+      if (activeTab) {
+        activeTab.classList.add('text-brand-700', 'bg-white', 'shadow-sm', 'font-semibold');
+        activeTab.classList.remove('text-slate-600');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Quick Status Check Logic
+    function handleQuickCheck(e) {
+      e.preventDefault();
+      const input = document.getElementById('quickCheckInput').value.trim().toUpperCase();
+      const resultDiv = document.getElementById('quickCheckResult');
+
+      resultDiv.classList.remove('hidden');
+
+      if (input.includes('1234') || input.includes('ABC')) {
+        resultDiv.innerHTML = `
+          <div class="bg-emerald-950/80 border border-emerald-500/40 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <span class="inline-block text-[10px] bg-emerald-500/30 text-emerald-300 font-bold px-2 py-0.5 rounded mb-1">MEMBER AKTIF</span>
+              <p class="text-white font-mono font-bold text-base">${input}</p>
+              <p class="text-xs text-slate-300">Pemilik: Ahmad Favian • Jenis: Mobil</p>
+              <p class="text-xs text-emerald-400 font-semibold mt-1">Masa Berlaku: s/d 20 November 2026 (61 hari tersisa)</p>
+            </div>
+            <button onclick="switchView('member')" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs rounded-lg transition">
+              Buka Kartu &rarr;
+            </button>
+          </div>
+        `;
+      } else if (input.includes('9999') || input.includes('EXP')) {
+        resultDiv.innerHTML = `
+          <div class="bg-rose-950/80 border border-rose-500/40 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <span class="inline-block text-[10px] bg-rose-500/30 text-rose-300 font-bold px-2 py-0.5 rounded mb-1">KEDALUWARSA / HABIS</span>
+              <p class="text-white font-mono font-bold text-base">${input}</p>
+              <p class="text-xs text-slate-300">Pemilik: Budi Santoso • Masa aktif berakhir 01 Agu 2026</p>
+              <p class="text-xs text-rose-300 font-semibold mt-1">Akses gerbang otomatis ditutup sementara.</p>
+            </div>
+            <button onclick="openPaymentModal('MBR-2026-003', 'Budi Santoso')" class="px-3 py-1.5 bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs rounded-lg transition">
+              Perpanjang Sekarang
+            </button>
+          </div>
+        `;
+      } else {
+        resultDiv.innerHTML = `
+          <div class="bg-slate-800/80 border border-slate-700 rounded-xl p-4 flex items-center justify-between">
+            <div>
+              <span class="inline-block text-[10px] bg-slate-700 text-slate-300 font-bold px-2 py-0.5 rounded mb-1">BELUM TERDAFTAR</span>
+              <p class="text-white font-mono font-bold text-base">${input}</p>
+              <p class="text-xs text-slate-400">Plat nomor belum ada di sistem langganan member.</p>
+            </div>
+            <button onclick="openRegisterModal('Mobil', 150000)" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-lg transition">
+              Daftar Member
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    // Payment Calculation & Modal
+    function openPaymentModal(memberId, memberName) {
+      document.getElementById('payMemberId').value = memberId;
+      document.getElementById('payMemberName').value = memberName + ' (' + memberId + ')';
+      calculatePayTotal();
+      document.getElementById('paymentModal').classList.remove('hidden');
+    }
+
+    function closePaymentModal() {
+      document.getElementById('paymentModal').classList.add('hidden');
+    }
+
+    function calculatePayTotal() {
+      const months = parseInt(document.getElementById('payDurationMonths').value);
+      const rate = 150000;
+      const total = months * rate;
+      document.getElementById('payTotalAmountDisplay').innerText = 'Rp ' + total.toLocaleString('id-ID');
+    }
+
+    function handleProcessPayment(e) {
+      e.preventDefault();
+      const memberName = document.getElementById('payMemberName').value;
+      const months = parseInt(document.getElementById('payDurationMonths').value);
+      const total = (months * 150000).toLocaleString('id-ID');
+
+      closePaymentModal();
+
+      // Show Receipt
+      document.getElementById('recMember').innerText = memberName.split(' (')[0];
+      document.getElementById('recTotal').innerText = 'Rp ' + total;
+      document.getElementById('recId').innerText = 'TRX-' + Math.floor(100000 + Math.random() * 900000);
+      document.getElementById('receiptModal').classList.remove('hidden');
+
+      // Update Portal Card if Favian
+      const newExpiry = '20 Feb 2027';
+      const portalCardExp = document.getElementById('portalCardExpiry');
+      if (portalCardExp) portalCardExp.innerText = newExpiry;
+
+      // Add to Gate Logs
+      addGateLog(`[PEMBAYARAN SUKSES] Member: ${memberName} memperpanjang ${months} bulan. Kuitansi terbit.`);
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receiptModal').classList.add('hidden');
+    }
+
+    // Register Modal
+    function openRegisterModal(type, price) {
+      document.getElementById('regType').value = type;
+      document.getElementById('registerModal').classList.remove('hidden');
+    }
+
+    function closeRegisterModal() {
+      document.getElementById('registerModal').classList.add('hidden');
+    }
+
+    function handleNewRegistration(e) {
+      e.preventDefault();
+      const name = document.getElementById('regName').value;
+      const plate = document.getElementById('regPlate').value.toUpperCase();
+      const type = document.getElementById('regType').value;
+
+      closeRegisterModal();
+      alert(`Pendaftaran Member Baru Berhasil!\n\nNama: ${name}\nPlat: ${plate}\nJenis: ${type}\n\nData telah tersimpan di entitas MEMBER dan KENDARAAN.`);
+
+      // Add row to admin table
+      const tbody = document.getElementById('adminTableBody');
+      const newRow = document.createElement('tr');
+      newRow.className = 'hover:bg-slate-50 transition';
+      newRow.innerHTML = `
+        <td class="py-3 px-4 font-mono font-bold text-brand-700">MBR-2026-00${tbody.children.length + 1}</td>
+        <td class="py-3 px-4"><div class="font-bold text-slate-900">${name}</div><div class="text-[11px] text-slate-400">0812-xxxx-xxxx</div></td>
+        <td class="py-3 px-4"><span class="font-mono font-bold bg-slate-100 px-2 py-0.5 rounded">${plate}</span> (${type})</td>
+        <td class="py-3 px-4 font-mono text-emerald-600 font-semibold">2026-10-20</td>
+        <td class="py-3 px-4"><span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Aktif</span></td>
+        <td class="py-3 px-4 text-center">
+          <button onclick="openPaymentModal('MBR-2026-NEW', '${name}')" class="px-2.5 py-1 bg-indigo-50 text-brand-700 rounded font-semibold text-[11px]">+ Iuran</button>
+        </td>
+      `;
+      tbody.prepend(newRow);
+
+      // Increment active stat
+      const stat = document.getElementById('statActiveMembers');
+      if (stat) stat.innerText = parseInt(stat.innerText) + 1;
+    }
+
+    // Gate Simulator Logic (HIPO 3.0 & 4.0)
+    function simulateGateIn(status) {
+      const arm = document.getElementById('gateInArm');
+      const display = document.getElementById('gateInDisplay');
+      const car = document.getElementById('gateInCar');
+
+      if (status === 'valid') {
+        display.innerText = 'STATUS: MEMBER AKTIF (SILAKAN MASUK)';
+        display.className = 'bg-emerald-950 border-2 border-emerald-500 text-emerald-300 font-mono text-center px-4 py-2 rounded-xl text-sm font-black tracking-wider shadow-inner mb-6 w-full max-w-xs';
+        
+        // Open Barrier
+        arm.classList.add('open');
+        car.classList.remove('opacity-60');
+        car.classList.add('translate-x-32', 'opacity-100');
+
+        addGateLog(`[GATE-IN-01] Tap RFID B 1234 ABC - Member Aktif: PALANG TERBUKA.`);
+
+        // Auto Close after 3 seconds
+        setTimeout(() => {
+          arm.classList.remove('open');
+          car.classList.remove('translate-x-32', 'opacity-100');
+          car.classList.add('opacity-60');
+          display.innerText = '[ STANDBY : TEMPEL KARTU ]';
+          display.className = 'bg-black/90 border-2 border-slate-700 text-emerald-400 font-mono text-center px-4 py-2 rounded-xl text-sm font-black tracking-wider shadow-inner mb-6 w-full max-w-xs';
+        }, 3200);
+
+      } else {
+        display.innerText = 'AKSES DITOLAK: MASA AKTIF HABIS!';
+        display.className = 'bg-rose-950 border-2 border-rose-500 text-rose-300 font-mono text-center px-4 py-2 rounded-xl text-sm font-black tracking-wider shadow-inner mb-6 w-full max-w-xs animate-bounce';
+        
+        addGateLog(`[GATE-IN-01] Tap RFID B 9999 EXP - Masa Berlaku Habis: PALANG TETAP TERTUTUP.`);
+
+        setTimeout(() => {
+          display.innerText = '[ STANDBY : TEMPEL KARTU ]';
+          display.className = 'bg-black/90 border-2 border-slate-700 text-emerald-400 font-mono text-center px-4 py-2 rounded-xl text-sm font-black tracking-wider shadow-inner mb-6 w-full max-w-xs';
+        }, 3000);
+      }
+    }
+
+    function simulateGateOut(plate) {
+      const arm = document.getElementById('gateOutArm');
+      const display = document.getElementById('gateOutDisplay');
+      const car = document.getElementById('gateOutCar');
+
+      display.innerText = `TERIMA KASIH: ${plate} (HATI-HATI)`;
+      display.className = 'bg-indigo-950 border-2 border-indigo-400 text-indigo-200 font-mono text-center px-4 py-2 rounded-xl text-sm font-black tracking-wider shadow-inner mb-6 w-full max-w-xs';
+
+      arm.classList.add('open');
+      car.classList.remove('opacity-60');
+      car.classList.add('translate-x-32', 'opacity-100');
+
+      addGateLog(`[GATE-OUT-01] Tap RFID ${plate} - Sesi Parkir SELESAI (Durasi: 2 Jam 15 Mnt). PALANG KELUAR TERBUKA.`);
+
+      setTimeout(() => {
+        arm.classList.remove('open');
+        car.classList.remove('translate-x-32', 'opacity-100');
+        car.classList.add('opacity-60');
+        display.innerText = '[ STANDBY : SCAN KELUAR ]';
+        display.className = 'bg-black/90 border-2 border-slate-700 text-indigo-400 font-mono text-center px-4 py-2 rounded-xl text-sm font-black tracking-wider shadow-inner mb-6 w-full max-w-xs';
+      }, 3200);
+    }
+
+    function addGateLog(msg) {
+      const logs = document.getElementById('gateLiveLogs');
+      const time = new Date().toLocaleTimeString('id-ID');
+      const div = document.createElement('div');
+      div.innerText = `[${time}] ${msg}`;
+      logs.prepend(div);
+    }
+
+    function clearGateLogs() {
+      document.getElementById('gateLiveLogs').innerHTML = '<div class="text-slate-500">Log dibersihkan.</div>';
+    }
+
+    function filterAdminTable() {
+      const filter = document.getElementById('adminSearchInput').value.toLowerCase();
+      const rows = document.querySelectorAll('#adminTableBody tr');
+      rows.forEach(row => {
+        row.style.display = row.innerText.toLowerCase().includes(filter) ? '' : 'none';
+      });
+    }
+
+    function toggleMemberStatus(btn) {
+      const row = btn.closest('tr');
+      const badge = row.querySelector('td:nth-child(5) span');
+      if (badge.innerText === 'Aktif') {
+        badge.innerText = 'Nonaktif';
+        badge.className = 'bg-slate-200 text-slate-700 text-[10px] font-bold px-2 py-0.5 rounded-full';
+      } else {
+        badge.innerText = 'Aktif';
+        badge.className = 'bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full';
+      }
+    }
+  </script>
+</body>
+</html>

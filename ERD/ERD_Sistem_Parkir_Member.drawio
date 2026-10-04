@@ -1,0 +1,93 @@
+<mxfile host="app.diagrams.net" agent="Antigravity">
+  <diagram id="ERD_Parkir_Member" name="ERD Sistem Parkir Member">
+    <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1400" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=16;fontColor=#0F172A;" value="&amp;lt;b&amp;gt;ENTITY RELATIONSHIP DIAGRAM (ERD)&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;&amp;lt;i&amp;gt;Sistem Informasi Parkir Khusus Member (SIP-Member) - Kelompok 2&amp;lt;/i&amp;gt;" vertex="1">
+          <mxGeometry height="50" width="600" x="350" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_member" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;align=left;verticalAlign=top;spacingTop=6;spacingLeft=10;spacingRight=10;fontSize=11;fontFamily=Helvetica;" value="&amp;lt;div style=&quot;text-align: center; font-size: 13px; font-weight: bold; padding-bottom: 4px; border-bottom: 2px solid #6c8ebf;&quot;&amp;gt;MEMBER&amp;lt;/div&amp;gt;&amp;lt;div style=&quot;padding-top: 6px; font-size: 11px; line-height: 1.5;&quot;&amp;gt;&amp;lt;b style=&quot;color: #b91c1c;&quot;&amp;gt;[PK] id_member&amp;lt;/b&amp;gt;&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; nama_member&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; no_telp&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; alamat&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; tgl_daftar&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; status_member&amp;lt;br/&amp;gt;&amp;lt;/div&amp;gt;" vertex="1">
+          <mxGeometry height="190" width="220" x="420" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_kendaraan" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;align=left;verticalAlign=top;spacingTop=6;spacingLeft=10;spacingRight=10;fontSize=11;fontFamily=Helvetica;" value="&amp;lt;div style=&quot;text-align: center; font-size: 13px; font-weight: bold; padding-bottom: 4px; border-bottom: 2px solid #82b366;&quot;&amp;gt;KENDARAAN&amp;lt;/div&amp;gt;&amp;lt;div style=&quot;padding-top: 6px; font-size: 11px; line-height: 1.5;&quot;&amp;gt;&amp;lt;b style=&quot;color: #b91c1c;&quot;&amp;gt;[PK] no_plat&amp;lt;/b&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;b style=&quot;color: #4338ca;&quot;&amp;gt;[FK] id_member&amp;lt;/b&amp;gt;&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; jenis_kendaraan&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; merk&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; warna&amp;lt;br/&amp;gt;&amp;lt;/div&amp;gt;" vertex="1">
+          <mxGeometry height="160" width="220" x="440" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_pembayaran" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;fillColor=#ffe6cc;strokeColor=#d79b00;strokeWidth=2;align=left;verticalAlign=top;spacingTop=6;spacingLeft=10;spacingRight=10;fontSize=11;fontFamily=Helvetica;" value="&amp;lt;div style=&quot;text-align: center; font-size: 13px; font-weight: bold; padding-bottom: 4px; border-bottom: 2px solid #d79b00;&quot;&amp;gt;PEMBAYARAN&amp;lt;/div&amp;gt;&amp;lt;div style=&quot;padding-top: 6px; font-size: 11px; line-height: 1.5;&quot;&amp;gt;&amp;lt;b style=&quot;color: #b91c1c;&quot;&amp;gt;[PK] id_pembayaran&amp;lt;/b&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;b style=&quot;color: #4338ca;&quot;&amp;gt;[FK] id_member&amp;lt;/b&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;b style=&quot;color: #4338ca;&quot;&amp;gt;[FK] id_petugas&amp;lt;/b&amp;gt;&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; tgl_bayar&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; tgl_mulai&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; tgl_kadaluarsa&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; nominal&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; metode_bayar&amp;lt;br/&amp;gt;&amp;lt;/div&amp;gt;" vertex="1">
+          <mxGeometry height="220" width="240" x="410" y="660" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_petugas" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;fillColor=#e1d5e7;strokeColor=#9673a6;strokeWidth=2;align=left;verticalAlign=top;spacingTop=6;spacingLeft=10;spacingRight=10;fontSize=11;fontFamily=Helvetica;" value="&amp;lt;div style=&quot;text-align: center; font-size: 13px; font-weight: bold; padding-bottom: 4px; border-bottom: 2px solid #9673a6;&quot;&amp;gt;PETUGAS&amp;lt;/div&amp;gt;&amp;lt;div style=&quot;padding-top: 6px; font-size: 11px; line-height: 1.5;&quot;&amp;gt;&amp;lt;b style=&quot;color: #b91c1c;&quot;&amp;gt;[PK] id_petugas&amp;lt;/b&amp;gt;&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; nama_petugas&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; username&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; password&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; peran&amp;lt;br/&amp;gt;&amp;lt;/div&amp;gt;" vertex="1">
+          <mxGeometry height="170" width="200" x="80" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="ent_parkir" parent="1" style="rounded=1;whiteSpace=wrap;html=1;arcSize=6;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;align=left;verticalAlign=top;spacingTop=6;spacingLeft=10;spacingRight=10;fontSize=11;fontFamily=Helvetica;" value="&amp;lt;div style=&quot;text-align: center; font-size: 13px; font-weight: bold; padding-bottom: 4px; border-bottom: 2px solid #82b366;&quot;&amp;gt;TRANSAKSI_PARKIR&amp;lt;/div&amp;gt;&amp;lt;div style=&quot;padding-top: 6px; font-size: 11px; line-height: 1.5;&quot;&amp;gt;&amp;lt;b style=&quot;color: #b91c1c;&quot;&amp;gt;[PK] id_parkir&amp;lt;/b&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;b style=&quot;color: #4338ca;&quot;&amp;gt;[FK] id_member&amp;lt;/b&amp;gt;&amp;lt;br/&amp;gt;&amp;lt;b style=&quot;color: #4338ca;&quot;&amp;gt;[FK] no_plat&amp;lt;/b&amp;gt;&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; waktu_masuk&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; waktu_keluar&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; gerbang_masuk&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; gerbang_keluar&amp;lt;br/&amp;gt;&amp;amp;nbsp;&amp;amp;bull; status_parkir&amp;lt;br/&amp;gt;&amp;lt;/div&amp;gt;" vertex="1">
+          <mxGeometry height="230" width="250" x="960" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_memiliki" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontStyle=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#663300;" value="&amp;lt;b&amp;gt;memiliki&amp;lt;/b&amp;gt;" vertex="1">
+          <mxGeometry height="44" width="110" x="475" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_melakukan_bayar" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontStyle=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#663300;" value="&amp;lt;b&amp;gt;melakukan&amp;lt;/b&amp;gt;" vertex="1">
+          <mxGeometry height="44" width="110" x="475" y="580" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_memproses" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontStyle=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#663300;" value="&amp;lt;b&amp;gt;memproses&amp;lt;/b&amp;gt;" vertex="1">
+          <mxGeometry height="44" width="100" x="305" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_melakukan_parkir" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontStyle=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#663300;" value="&amp;lt;b&amp;gt;melakukan sesi&amp;lt;/b&amp;gt;" vertex="1">
+          <mxGeometry height="44" width="120" x="780" y="430" as="geometry" />
+        </mxCell>
+        <mxCell id="rel_digunakan" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;fontStyle=1;align=center;verticalAlign=middle;fontSize=11;fontColor=#663300;" value="&amp;lt;b&amp;gt;digunakan pada&amp;lt;/b&amp;gt;" vertex="1">
+          <mxGeometry height="44" width="120" x="820" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="e1_1" edge="1" parent="1" source="ent_member" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#0F172A;" target="rel_memiliki" value="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-0.4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e1_2" edge="1" parent="1" source="rel_memiliki" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#0F172A;" target="ent_kendaraan" value="N">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-0.4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2_1" edge="1" parent="1" source="ent_member" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#0F172A;" target="rel_melakukan_bayar" value="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-0.4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2_2" edge="1" parent="1" source="rel_melakukan_bayar" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#0F172A;" target="ent_pembayaran" value="N">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-0.4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3_1" edge="1" parent="1" source="ent_petugas" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#0F172A;" target="rel_memproses" value="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-0.4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3_2" edge="1" parent="1" source="rel_memproses" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#0F172A;" target="ent_pembayaran" value="N">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-0.4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4_1" edge="1" parent="1" source="ent_member" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#0F172A;" target="rel_melakukan_parkir" value="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-0.4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4_2" edge="1" parent="1" source="rel_melakukan_parkir" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#0F172A;" target="ent_parkir" value="N">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-0.4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5_1" edge="1" parent="1" source="ent_kendaraan" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#0F172A;" target="rel_digunakan" value="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-0.4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e5_2" edge="1" parent="1" source="rel_digunakan" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#475569;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#0F172A;" target="ent_parkir" value="N">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-0.4" as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,3 @@
+# Keep SQLite database file tracked as requested
+!database.sqlite
+!database_dump.sql

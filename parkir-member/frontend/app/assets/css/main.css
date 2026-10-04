@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Plus Jakarta Sans", system-ui, sans-serif;
+    color: #1d1d1f;
+    background-color: #f5f5f7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: -0.011em;
+  }
+}
+
+/* Apple Spring Easing Variables (Designing Fluid Interfaces - WWDC) */
+:root {
+  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --spring-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring-responsive: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.font-mono-metric {
+  font-family: 'JetBrains Mono', -apple-system, monospace;
+}
+
+/* Apple-style Tactile Button Response */
+.apple-btn {
+  transition: transform 140ms var(--spring-responsive), background-color 140ms ease, box-shadow 140ms ease;
+}
+.apple-btn:active {
+  transform: scale(0.97);
+  transition: transform 80ms ease-out;
+}
+
+/* Apple Translucent Glass Materials */
+.apple-glass {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 20px 60px -15px rgba(0, 0, 0, 0.05), 0 0 1px 1px rgba(0, 0, 0, 0.03);
+}
+
+.apple-glass-card {
+  background: rgba(255, 255, 255, 0.86);
+  backdrop-filter: blur(32px) saturate(190%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 30px 80px -20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+/* Typography Optical Tuning */
+.apple-display {
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  font-optical-sizing: auto;
+}
+.apple-title {
+  letter-spacing: -0.022em;
+  line-height: 1.25;
+}
+.apple-body {
+  letter-spacing: -0.006em;
+  line-height: 1.5;
+}
+
+/* Barrier arm animation */
+.gate-arm {
+  transform-origin: 12px 12px;
+  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.gate-arm.open {
+  transform: rotate(-75deg);
+}
+
+/* Custom scrollbars for light theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.35);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.55);
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Printable receipt */
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  #printReceiptArea, #printReceiptArea * {
+    visibility: visible !important;
+  }
+  #printReceiptArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 20px;
+  }
+}

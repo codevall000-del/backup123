@@ -1,0 +1,48 @@
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+
+# Editor & IDE directories
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Backend Dependencies & Cache
+parkir-member/backend/vendor/
+parkir-member/backend/.env
+parkir-member/backend/.env.backup
+parkir-member/backend/.env.production
+parkir-member/backend/.phpunit.result.cache
+parkir-member/backend/.phpunit.cache
+parkir-member/backend/storage/*.key
+parkir-member/backend/storage/logs/*.log
+parkir-member/backend/storage/framework/cache/data/*
+!parkir-member/backend/storage/framework/cache/data/.gitignore
+parkir-member/backend/storage/framework/sessions/*
+!parkir-member/backend/storage/framework/sessions/.gitignore
+parkir-member/backend/storage/framework/views/*
+!parkir-member/backend/storage/framework/views/.gitignore
+
+# Frontend Dependencies & Build Outputs
+parkir-member/frontend/node_modules/
+parkir-member/frontend/.output/
+parkir-member/frontend/.data/
+parkir-member/frontend/.nuxt/
+parkir-member/frontend/.nitro/
+parkir-member/frontend/.cache/
+parkir-member/frontend/dist/
+parkir-member/frontend/logs/
+parkir-member/frontend/*.log
+parkir-member/frontend/.env
+parkir-member/frontend/.env.*
+!parkir-member/frontend/.env.example
+
+# Explicitly ensure SQLite database & dump are tracked
+!parkir-member/backend/database/database.sqlite
+!parkir-member/backend/database/database_dump.sql

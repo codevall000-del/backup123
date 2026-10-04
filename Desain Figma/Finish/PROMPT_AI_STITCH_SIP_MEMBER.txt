@@ -1,0 +1,382 @@
+=== MASTER DESIGN BRIEF: SIP-Member Parking System ===
+Role: You are a Principal UI/UX Designer specializing in operational enterprise dashboards and kiosk interfaces. Design a complete, professional, highly user-friendly web application for "SIP-Member" (Sistem Informasi Parkir Khusus Member Berlangganan) — a membership-based parking management system for a school project. The design must be pixel-perfect, Figma-ready with Auto-Layout logic, and visually impressive for academic presentation.
+
+=== DESIGN SYSTEM FOUNDATION ===
+
+Typography:
+- Primary: "Plus Jakarta Sans" (headers, body, UI labels)
+- Monospace: "JetBrains Mono" or "SF Mono" (license plates, transaction IDs, timestamps, PIN digits)
+- Scale: Display 36/40, H1 28/32, H2 20/24, H3 16/20, Body 14/20, Caption 12/16, Micro 10/14
+
+Color Palette:
+- Primary Brand: Indigo (#4F46E5 main, #3730A3 hover, #EEF2FF surface, #E0E7FF border)
+- Success/Active: Emerald (#10B981 main, #059669 hover, #ECFDF5 surface)
+- Warning/Expiring: Amber (#F59E0B main, #D97706 hover, #FFFBEB surface)
+- Danger/Expired: Rose (#EF4444 main, #DC2626 hover, #FEF2F2 surface)
+- Neutral: Slate (#0F172A text-primary, #334155 text-secondary, #64748B text-muted, #CBD5E1 border, #F1F5F9 bg-secondary, #F8FAFC bg-primary, #FFFFFF surface)
+- Special - Gate LED Display: Pure black (#000000) background with neon-colored monospace text
+
+Spacing & Layout:
+- Base unit: 4px grid
+- Border radius: 8px (inputs), 12px (cards small), 16px (cards large), 24px (modals, hero sections)
+- Shadow: sm (cards), lg (modals/dropdowns), 2xl (floating elements)
+- Touch targets: minimum 48px height for all interactive elements (critical for kiosk screens)
+
+Component Style:
+- Inputs: Rounded-xl, 1px slate-200 border, subtle inner shadow, 40px height desktop / 48px kiosk
+- Buttons: Rounded-xl, bold 13px text, icon-left layout, shadow-sm on primary CTA
+- Cards: White bg, 1px slate-200 border, rounded-2xl, subtle shadow-sm
+- Tables: Alternating row hover (slate-50), sticky header, compact 13px text
+- Badges/Status Pills: Rounded-full, 10px bold uppercase text, tinted background + matching border
+- Modals: Rounded-3xl, backdrop-blur overlay, slide-up animation implied
+
+=== SCREEN 1: PORTAL AKSES UTAMA (Login + Dual Gateway) ===
+Frame: 1440 × 900 — "01_Portal_Akses_Utama"
+
+Context: The very first screen all users see. It serves as the authentication gateway for staff (cashier, operator, admin) AND the quick-launch point for the unattended Gate-In kiosk terminal.
+
+Background:
+- Full-screen subtle animated mesh gradient (Indigo-900 to Slate-900 to Slate-950)
+- Faint dot-grid pattern overlay at 10% opacity for texture
+- Centered content card with glassmorphism effect (white/10 bg, backdrop-blur-xl, white/20 border)
+
+Layout — Two-Panel Card (max-width 960px, centered):
+
+LEFT PANEL (55% width) — "Login Petugas Operasional":
+- Top: SIP-Member logo (10×10 rounded-xl indigo gradient icon with barrier/building SVG) + "SIP-Member" wordmark (bold 18px) + badge "Fase F • XI RPL 2" (10px, indigo-100/indigo-700)
+- Heading: "Portal Operasional Petugas" (bold 24px, white)
+- Subtitle: "Masuk untuk mengakses Pos Gerbang Keluar, Loket Kasir, atau Dashboard Admin" (14px, slate-300)
+- Form Fields:
+  * Label "Username / ID Petugas" → Text input with user icon prefix, placeholder "Contoh: KSR-01"
+  * Label "Password" → Password input with lock icon prefix + show/hide eye toggle button
+  * Label "Pos Tugas Aktif" → Dropdown selector with options: "Pos Gerbang Keluar 01", "Pos Gerbang Keluar 02", "Loket Kasir Utama", "Pusat Administrasi"
+- Checkbox (tiny): "Ingat sesi login selama shift aktif"
+- CTA Button (full-width): "Masuk ke Sistem ➜" (Indigo-600 bg, white text, bold, rounded-xl, shadow-lg, 48px height)
+- Footer note: "Lupa password? Hubungi Admin Pengelola Parkir" (11px, slate-400, with underline link)
+
+RIGHT PANEL (45% width) — "Mode Kios Gerbang Masuk":
+- Distinct visual separation: bordered card with emerald-500/10 bg tint + emerald-500/30 left border (4px)
+- Icon: Large barrier gate SVG illustration (64px, emerald-themed)
+- Heading: "Terminal Gerbang Masuk" (bold 20px, white)
+- Subtitle: "Buka antarmuka kios mandiri untuk jalur masuk kendaraan member. Tidak memerlukan login operator." (13px, slate-300)
+- Feature bullets (emerald checkmark + 12px text):
+  * "Tap RFID / Scan QR otomatis"
+  * "Palang buka instan untuk member aktif"
+  * "PIN cepat 6-digit untuk satpam/petugas jaga"
+- CTA Button (full-width): "Buka Kios Gate-In ➜" (Emerald-600 bg, white text, bold, 48px height, rounded-xl, shadow-lg shadow-emerald/30)
+- Security badge: Lock icon + "Dilindungi PIN Otorisasi Petugas" (10px, slate-400)
+
+Bottom of Card:
+- Divider line (white/10)
+- School project credit: "Tugas Perancangan HIPO & ERD — Kelompok 2, XI RPL 2 — Guru: Bu Fadillah" (11px, slate-500)
+
+---
+
+=== SCREEN 2: KIOS MANDIRI GERBANG MASUK (Gate-In Self-Service Kiosk) ===
+Frame: 1920 × 1080 — "02_Kios_GateIn_Mandiri"
+
+Context: Displayed on the outdoor touchscreen terminal at the parking entrance. Must be readable from inside a car/motorcycle (large fonts, high contrast). Unattended — no cashier. Security guards nearby can assist using quick PIN.
+
+Overall Layout: Dark fullscreen kiosk mode (Slate-950 bg), no scrolling, everything fits in one viewport.
+
+TOP STATUS BAR (full-width, 64px height, Slate-900 bg):
+- Left: Pulsing green dot (8px) + "GATE-IN 01 — JALUR MEMBER" (bold 16px monospace, emerald-400)
+- Center: Live digital clock "22:45:30 WIB" (bold 24px monospace, white) + Date "Sabtu, 3 Oktober 2026"
+- Right: Status badges row:
+  * "ONLINE" (emerald dot + emerald text, dark bg pill)
+  * "RFID READER: OK" (similar style)
+  * "PALANG: STANDBY" (amber dot + amber text)
+
+MAIN CONTENT — 3-Column Layout:
+
+COLUMN 1 (Left, 30% width) — "Instruksi Visual":
+- Large illustrated card showing RFID card being tapped on reader
+- Animated contactless waves icon (concentric arcs pulsing)
+- Text: "Silakan Tempel Kartu Member pada Reader" (bold 22px, white, center)
+- Sub-text: "atau Scan QR Code Digital dari Smartphone Anda" (14px, slate-400)
+- Below: Simple 3-step mini guide with icons:
+  1. "Tempel Kartu" (card icon)
+  2. "Sistem Verifikasi" (shield-check icon)
+  3. "Palang Terbuka" (barrier-open icon)
+
+COLUMN 2 (Center, 40% width) — "Status & Feedback Display":
+- GATE LED DISPLAY (prominent, 400px wide, 80px height):
+  * Default state: Black bg, 2px slate-700 border, rounded-xl
+  * Text: "[ STANDBY : TEMPEL KARTU RFID ]" (bold 18px monospace, emerald-400, letter-spacing wide)
+- Below LED: BARRIER ARM VISUAL ILLUSTRATION
+  * SVG representation of parking barrier post (amber gradient) with red-white striped arm
+  * Car silhouette approaching from left
+  * (Show this as a static visual element representing the gate mechanism)
+- DYNAMIC RESULT CARD (below barrier, changes based on tap result):
+  * STATE: IDLE — Empty/hidden
+  * STATE: MEMBER AKTIF (Green):
+    - Emerald-950 bg, emerald-500/40 border, rounded-2xl, padding 24px
+    - Large checkmark icon (48px, emerald-400)
+    - "MEMBER AKTIF ✓" badge (emerald-500/30 bg, emerald-300 text, bold 12px)
+    - Member name: "Ahmad Favian" (bold 24px, white)
+    - Plate: "B 1234 ABC" (monospace 20px, white)
+    - Vehicle: "Mobil • Honda HR-V (Hitam)" (14px, slate-300)
+    - Expiry: "Masa Aktif s/d: 20 November 2026 (Sisa 48 hari)" (13px, emerald-400, bold)
+    - Bottom: "PALANG TERBUKA — SILAKAN MASUK" (bold 16px, emerald-300, with animated arrow-right)
+  * STATE: KADALUARSA (Red):
+    - Rose-950 bg, rose-500/40 border
+    - Large X-circle icon (48px, rose-400)
+    - "KARTU KADALUARSA" badge
+    - "Masa aktif berakhir pada 01 Agustus 2026" (rose-300)
+    - "PALANG TETAP TERTUTUP" + "Silakan hubungi petugas atau perpanjang di loket kasir"
+    - Button: "Panggil Petugas via Interkom" (rose-600 bg)
+  * STATE: TIDAK DIKENAL (Gray):
+    - Slate-800 bg
+    - "KARTU TIDAK TERDAFTAR" badge
+    - "Silakan daftar member terlebih dahulu di loket kasir"
+
+COLUMN 3 (Right, 30% width) — "Quick Actions & Camera":
+- Camera LPR Preview Card:
+  * Simulated camera view frame (dark bg, rounded-xl, "📷 KAMERA LPR" label top-left)
+  * Detected plate overlay: "B 1234 ABC" in highlighted box (amber border, white bg, bold monospace)
+  * Status: "Plat Terdeteksi ✓" (emerald-400, 12px)
+- Spacer (16px)
+- Action Buttons Stack (full-width, large touch-friendly):
+  * "🔊 Panggil Interkom Pusat" (Slate-800 bg, white text, 56px height, rounded-xl)
+  * "🔓 Bantuan Petugas / Buka Palang Darurat" (Amber-600 bg, slate-950 text, 56px height, rounded-xl, PROMINENT) — This triggers the PIN modal
+
+OVERLAY MODAL — "Otorisasi Cepat Petugas Lapangan" (Floating, 480px wide):
+- Backdrop: slate-950/80 blur overlay
+- Modal card: White bg, rounded-3xl, shadow-2xl
+- Header (Slate-50 bg, border-b):
+  * Shield-lock icon (indigo-600, 24px) + "Input PIN Cepat Petugas Jaga" (bold 18px)
+  * Subtitle: "Khusus satpam atau petugas lapangan yang bertugas di sekitar gerbang" (12px, slate-500)
+  * Close (X) button top-right
+- Body:
+  * PIN Display: 6 masked dots (●) in individual rounded boxes (48×48px each, slate-100 bg, slate-300 border), with active box highlighted (indigo-500 border)
+  * On-screen Numeric Keypad (4 rows × 3 cols, 64×64px per key):
+    - Row 1: [1] [2] [3]
+    - Row 2: [4] [5] [6]
+    - Row 3: [7] [8] [9]
+    - Row 4: [⌫ Hapus] [0] [✓ Validasi]
+    - Keys: White bg, slate-200 border, rounded-xl, bold 20px, hover:slate-100
+    - [⌫ Hapus]: Slate-100 bg, slate-700 text
+    - [✓ Validasi]: Indigo-600 bg, white text
+  * Alasan Override (below keypad):
+    - Label: "Pilih Alasan Bypass Gate:" (bold 12px)
+    - Chip/pill selector options (selectable, single-select):
+      * "Kartu Rusak / Tidak Terbaca"
+      * "Iuran Baru Dibayar Manual di Loket"
+      * "Kendaraan Darurat / Prioritas"
+      * "Instruksi Supervisor"
+    - Active chip: Indigo-600 bg, white text. Inactive: Slate-100 bg, slate-600 text
+- Footer (border-t, flex justify-between):
+  * "Batal" button (Slate-100 bg, slate-700 text, rounded-xl)
+  * "Validasi & Buka Palang ➜" button (Emerald-600 bg, white text, rounded-xl, disabled if PIN not complete + no reason selected)
+- Info note below footer: "⚠️ Setiap override akan tercatat di Audit Log sistem beserta ID petugas, waktu, dan alasan." (10px, slate-400, italic)
+
+---
+
+=== SCREEN 3: POS OPERATOR GERBANG KELUAR (Gate-Out Manned Booth) ===
+Frame: 1440 × 900 — "03_Pos_Operator_GateOut"
+
+Context: Manned booth at exit gate. Operator has logged in and must verify each vehicle before releasing the barrier.
+
+TOP NAVBAR (sticky, 64px, white bg, border-b):
+- Left: SIP-Member logo (small) + "Pos Gerbang Keluar 01" (bold 14px)
+- Center: Live clock "22:45 WIB — Sabtu, 3 Okt 2026" (monospace 13px, slate-500)
+- Right: Operator profile pill ("👤 Budi Santoso — Shift Pagi", 12px) + "🔴 Palang Darurat" button (Rose-600, small) + "Logout ➜" button (Slate-100, small)
+
+MAIN CONTENT — 2-Column Split (60/40):
+
+LEFT COLUMN (60%) — "Inspeksi Kendaraan Keluar":
+- Section A — Camera Feeds (2 side-by-side cards):
+  * Card 1: "📷 Kamera Depan — Plat Kendaraan" (simulated dark camera view, 16:9 ratio)
+    - Detected plate overlay: "B 1234 ABC" in highlight box
+  * Card 2: "📷 CCTV Gate Keluar" (wider angle view simulation)
+- Section B — Hasil Tap Kartu Keluar (White card, border-l-4 indigo-500):
+  * Header row: "Hasil Scan Kartu Keluar" + timestamp "Tap: 14:30:12 WIB"
+  * Data grid (2 cols):
+    - ID Member: "MBR-2026-001" (monospace, indigo-700)
+    - Nama: "Ahmad Favian" (bold, slate-900)
+    - Plat Terdaftar: "B 1234 ABC" (monospace, bold, badge style)
+    - Jenis: "Mobil — Honda HR-V (Hitam)"
+  * VALIDITY BADGE (large, prominent):
+    - "MEMBER AKTIF — Berlaku s/d 20 November 2026 (Sisa 48 Hari)" (Emerald bg, large text)
+  * PLAT MATCH COMPARISON (important security check, HIPO 4.2):
+    - Two-column comparison with arrow between:
+    - Left: "Plat Terdaftar di Kartu: B 1234 ABC" (slate-100 bg box)
+    - Arrow icon: "↔"
+    - Right: "Plat Kamera LPR: B 1234 ABC" (slate-100 bg box)
+    - Match result: Large "✓ MATCH — COCOK" badge (emerald-100 bg, emerald-800 text, rounded-full) OR "✗ TIDAK COCOK" (rose-100 bg)
+
+RIGHT COLUMN (40%) — "Detail Sesi & Kontrol Palang":
+- Section C — Sesi Parkir Card (White, shadow-sm):
+  * Title: "Detail Sesi Parkir Aktif"
+  * Info rows (label : value):
+    - ID Sesi: "PRK-2026-004812" (monospace)
+    - Waktu Masuk: "14:30 WIB via GATE-IN 01" (with clock icon)
+    - Waktu Keluar: "16:45 WIB (Sekarang)" (with clock icon, emerald text)
+    - Durasi Parkir: "2 Jam 15 Menit" (bold 18px, indigo-700)
+    - Metode Masuk: "Tap RFID" or "Override PIN (Satpam Joko, Alasan: Kartu Rusak)"
+  * Divider
+  * Biaya Section:
+    - "Biaya Parkir: Rp 0,- (GRATIS)" (bold 20px, emerald-600)
+    - Sub: "Termasuk dalam iuran member bulanan — tidak ada biaya tambahan" (12px, slate-500)
+- Section D — Status Palang Visual:
+  * Mini barrier arm illustration (inline, 120px wide)
+  * Status text: "PALANG: TERTUTUP 🔴" (monospace, bold, rose-600) or "TERBUKA 🟢" (emerald-600)
+- Section E — Action Buttons (stacked, full-width):
+  * PRIMARY: "✓ Konfirmasi & Buka Palang Keluar" (Emerald-600 bg, white text, 56px height, bold, rounded-xl, shadow-lg)
+    - Sub-text: "Shortcut: Tekan ENTER atau SPACE" (10px, slate-400)
+  * SECONDARY: "⚠️ Tahan Kendaraan / Laporkan Masalah" (Rose-100 bg, rose-700 text, 44px height, rounded-xl)
+  * TERTIARY: "📋 Lihat Riwayat Sesi Hari Ini" (Slate-100 bg, slate-600 text, 40px height, rounded-xl)
+
+---
+
+=== SCREEN 4: LOKET KASIR & ADMINISTRASI (Registration + Payment Counter) ===
+Frame: 1440 × 900 — "04_Loket_Kasir_Administrasi"
+
+Context: Back-office counter screen for cashier staff. Handles member registration, monthly fee payments, and member data management.
+
+LAYOUT: Collapsible Sidebar (240px) + Main Content Area
+
+SIDEBAR (Slate-900 bg, white text):
+- Logo section: SIP-Member icon + "SIP-Member" (bold 16px) + "Kasir Panel" badge (10px, indigo-400)
+- Nav items (vertical stack, 44px height each, rounded-lg hover):
+  * 📊 Dashboard Ringkas (active: indigo-600 bg)
+  * 👤 Registrasi Member Baru
+  * 💳 Pembayaran Iuran
+  * 🚗 Data Kendaraan
+  * 📋 Rekap Transaksi Hari Ini
+  * Divider
+  * ⚙️ Pengaturan Akun
+- Bottom: Operator info "Kasir: Siti Nurhaliza (KSR-01)" + Logout button
+
+MAIN CONTENT — Tabbed Interface:
+
+TOP BAR:
+- Breadcrumb: "Loket Kasir > Registrasi & Pembayaran"
+- Right: Quick search bar ("Cari member: nama, plat, atau ID...") + "Scan Kartu RFID" button (with NFC icon)
+
+TAB 1 — "Pendaftaran Member Baru" (HIPO 1.1 + 1.2):
+- Two-column form (60/40 split):
+  * Left Column — Data Identitas Member:
+    - Nama Lengkap* (text input, placeholder "Contoh: Ahmad Favian")
+    - No. KTP / NIK* (text input, 16-digit, placeholder "32xxxxxxxxx")
+    - No. WhatsApp / HP* (tel input, placeholder "0812-xxxx-xxxx")
+    - Alamat Lengkap (textarea, 3 rows, placeholder "Jl. Merdeka No. 10, Jakarta Selatan")
+  * Right Column — Data Kendaraan (Repeatable Sub-form):
+    - Title: "Kendaraan yang Didaftarkan" + "+ Tambah Kendaraan Lain" link button
+    - Vehicle Card #1 (bordered card):
+      * Jenis Kendaraan: Radio buttons → ◉ Motor (Rp 50.000/bln) | ○ Mobil (Rp 150.000/bln)
+      * Nomor Plat*: text input (monospace, uppercase auto, placeholder "B 1234 ABC")
+      * Merk & Tipe: text input (placeholder "Honda HR-V")
+      * Warna: text input (placeholder "Hitam Metalik")
+      * Upload Foto STNK: file dropzone (dashed border, cloud-upload icon, "Seret file atau klik untuk unggah")
+    - Vehicle Card #2 (optional, collapsible): Same fields + "Hapus Kendaraan Ini" red link
+  * Bottom Section (full-width):
+    - Assign RFID Card: Card with NFC icon + input "No. Seri Kartu RFID" (readonly) + "Tempel Kartu Baru pada Reader..." button (animated pulsing border)
+    - Summary Box: "Paket Awal: 1 Bulan — Total: Rp 150.000" (auto-calculated from vehicle type)
+  * Action Row:
+    - "Reset Form" (Slate-100 bg) | "Simpan & Cetak Kartu Member ➜" (Indigo-600 bg, bold, shadow)
+
+TAB 2 — "Perpanjangan Iuran Bulanan" (HIPO 2.1 + 2.2 + 2.3 + 2.4):
+- Search Section:
+  * Large search bar: "Cari berdasarkan Nama, No. Plat, ID Member, atau Tap Kartu RFID..." (full-width, 48px height)
+  * Quick filter chips: "Semua" | "Aktif" | "Akan Habis (< 7 Hari)" | "Kadaluarsa"
+- Member Profile Preview Card (appears after search/tap):
+  * Left: Avatar circle (initials) + Name "Ahmad Favian" + ID "MBR-2026-001" + Phone
+  * Center: Status badge (Aktif/Kadaluarsa) + "Masa Aktif: 12 Jan 2026 — 20 Nov 2026"
+  * Right: Days remaining counter "Sisa: 48 Hari" (emerald) or "Telat: 63 Hari" (rose)
+- Payment Form:
+  * Subscription Package Selector (visual card grid, single-select):
+    - Card 1: "1 Bulan" — Motor Rp 50.000 / Mobil Rp 150.000 (default selected, indigo border)
+    - Card 2: "3 Bulan (Diskon 5%)" — Motor Rp 142.500 / Mobil Rp 427.500 (show crossed original price)
+    - Card 3: "6 Bulan (Diskon 8%)" — pricing shown
+    - Card 4: "12 Bulan (Diskon 12%)" — pricing shown + "Paling Hemat" badge
+  * Payment Method: Visual icon selector → 💵 Tunai | 📱 QRIS | 🏦 Transfer Bank | 💳 Debit/Kredit
+  * Summary Box (indigo-50 bg, rounded-xl, border):
+    - Line items: "Iuran 3 Bulan × Rp 150.000" — "Rp 450.000"
+    - Discount: "Diskon 5% (3 Bulan)" — "-Rp 22.500" (emerald text)
+    - Divider
+    - Total: "Rp 427.500" (bold 24px, indigo-700)
+    - New expiry: "Masa Aktif Baru: 20 Nov 2026 → 20 Feb 2027" (emerald, bold)
+  * Action: "Proses Pembayaran & Cetak Kuitansi ➜" (Emerald-600 bg, full-width, 48px)
+
+TAB 3 — "Manajemen Data Member" (HIPO 1.3 + 1.4):
+- Data table with columns: ID Member | Nama (+ phone) | Kendaraan/Plat | Jatuh Tempo | Status | Aksi
+- Sample rows (3-4 members with mixed statuses)
+- Action column: "Edit" button (slate) | "+ Iuran" button (indigo) | "Nonaktifkan" button (rose, with confirmation dialog)
+- Table footer: Pagination + "Export ke Excel" button
+
+FLOATING MODAL — Kuitansi Bukti Bayar (HIPO 2.4):
+- Receipt-style card (max-width 400px, dashed border separator lines)
+- Header: SIP logo + "SIP-MEMBER PARKING" + "Bukti Pembayaran Iuran" badge (emerald)
+- Details: No. Transaksi, Tanggal/Waktu, Nama Member, Plat, Durasi Perpanjangan (e.g. "3 Bulan"), Tanggal Mulai, Tanggal Kadaluarsa Baru, Metode Bayar, Petugas Kasir
+- Total: "Rp 427.500" (bold, large)
+- Footer: "Cetak Bukti" button + "Tutup" button
+- Fine print: "Simpan kuitansi ini sebagai bukti sah pembayaran iuran parkir member."
+
+---
+
+=== SCREEN 5: DASHBOARD MONITORING & LAPORAN MANAJEMEN ===
+Frame: 1440 × 900 — "05_Dashboard_Admin_Monitoring"
+
+Context: Real-time parking operations overview and financial/visit reporting for Admin/Supervisor. Read-heavy, data visualization focused.
+
+LAYOUT: Same sidebar as Screen 4 (but "Dashboard" active) + Main Content
+
+TOP HEADER:
+- "Dashboard Monitoring & Laporan" (H1, bold)
+- "Admin: Pak Supriadi (ADM-01)" badge
+- Right: Date range picker + "Refresh Data" button + "Export Semua Laporan" dropdown (PDF/Excel)
+
+ROW 1 — KPI Summary Cards (4 cards, equal width):
+- Card 1: "Total Member Aktif" → "842" (large bold) + "+12% bulan ini" (emerald badge, arrow-up icon)
+- Card 2: "Okupansi Slot Parkir" → "185 / 250 Terisi" + progress bar (74%, indigo fill) + "74%" badge
+- Card 3: "Kunjungan Hari Ini" → "420 Masuk / 395 Keluar" (split display) + "25 Sedang Parkir" badge (amber)
+- Card 4: "Kas Iuran Bulan Ini" → "Rp 42.500.000,-" (large bold emerald) + "+8.4% vs bulan lalu" badge
+
+ROW 2 — Split Section (50/50):
+
+LEFT — "Rekap Pendapatan Iuran Bulanan (HIPO 5.1)":
+- Bar chart visualization (last 6 months):
+  * X-axis: Mei, Jun, Jul, Agu, Sep, Okt 2026
+  * Y-axis: Revenue in millions
+  * Bars: Indigo-500 fill, rounded-top, with value labels on top
+  * Target line: Dashed horizontal line at Rp 40.000.000
+- Below chart: Summary table (Month | Motor Count | Mobil Count | Total Revenue | vs Target %)
+- "Export Rekap PDF" button
+
+RIGHT — "Laporan Kunjungan Parkir Harian (HIPO 5.2)":
+- Mini stat cards (2×2 grid):
+  * "Rata-rata Durasi Parkir: 3 Jam 42 Menit"
+  * "Peak Hour: 07:00–09:00 WIB"
+  * "Override PIN Hari Ini: 3 kali"
+  * "Kartu Ditolak Hari Ini: 7 kali"
+- Visit trend mini line chart (last 7 days)
+- "Lihat Detail Lengkap" link
+
+ROW 3 — "Feed Aktivitas Gate Real-Time":
+- Live activity table (auto-updating implied):
+  * Columns: Waktu | Gate | Arah (Masuk/Keluar) | ID Member | Nama | Plat | Status (Sukses/Ditolak/Bypass PIN) | Petugas
+  * Sample rows (6-8 entries):
+    - "22:42 | GATE-IN 01 | Masuk | MBR-001 | Ahmad Favian | B 1234 ABC | ✓ Sukses | — (Otomatis)"
+    - "22:38 | GATE-IN 01 | Masuk | MBR-003 | Budi Santoso | B 9999 EXP | ✗ Ditolak (Kadaluarsa) | —"
+    - "22:35 | GATE-IN 01 | Masuk | MBR-015 | Andi Saputra | B 7777 DEF | ⚠️ Bypass PIN | Satpam Joko (Alasan: Kartu Rusak)"
+    - "22:30 | GATE-OUT 01 | Keluar | MBR-001 | Ahmad Favian | B 1234 ABC | ✓ Selesai (Durasi: 2j15m) | Op. Budi"
+  * Status column uses color-coded badges:
+    - Sukses: emerald badge
+    - Ditolak: rose badge
+    - Bypass PIN: amber badge with warning icon
+  * Row with Bypass PIN: slight amber-50 background tint (audit highlight)
+- Table footer: "Auto-refresh setiap 10 detik" indicator + Filter by Gate dropdown + Filter by Status dropdown
+
+=== ADDITIONAL DESIGN NOTES ===
+
+1. All text and microcopy must be in Indonesian (Bahasa Indonesia) appropriate for an educational/school project context.
+2. Each screen should be its own Figma Frame with proper naming convention (01_, 02_, etc.).
+3. Use Auto-Layout for all containers, cards, tables, and button groups.
+4. Include proper empty states for tables (illustration + "Belum ada data" text).
+5. Include hover states for buttons (darken by 1 shade) and focus states for inputs (indigo ring).
+6. The PIN modal on Screen 2 should be shown as a separate overlay frame positioned on top of the kiosk screen.
+7. The Receipt modal on Screen 4 should also be shown as a separate overlay frame.
+8. For all data tables, show the table header row and at least 3-4 data rows to demonstrate the layout.
+9. Icons: Use Heroicons outline style (24px) consistently throughout all screens.
+10. Ensure WCAG AA contrast ratio compliance for all text-on-background combinations.

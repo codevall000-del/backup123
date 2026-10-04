@@ -1,0 +1,1538 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIP-Member V2 | Sistem Informasi Parkir Khusus Member</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81',
+              dark: '#0f172a',
+            },
+            accent: {
+              emerald: '#10b981',
+              amber: '#f59e0b',
+              rose: '#ef4444',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Barrier arm animation */
+    .gate-arm {
+      transform-origin: 12px 12px;
+      transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .gate-arm.open {
+      transform: rotate(-75deg);
+    }
+    /* Printable receipt */
+    @media print {
+      body * {
+        visibility: hidden !important;
+      }
+      #printReceiptArea, #printReceiptArea * {
+        visibility: visible !important;
+      }
+      #printReceiptArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-800 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- ============================================================= -->
+  <!-- TOP GLOBAL NAVIGATOR & SCREEN SWITCHER (For Testing & Figma)  -->
+  <!-- ============================================================= -->
+  <header class="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 text-white shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo & School Project Badge -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+            </svg>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-extrabold text-lg tracking-tight text-white">SIP-Member</span>
+              <span class="text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full">V2 Finish • Kelompok 2</span>
+            </div>
+            <p class="text-xs text-slate-400 hidden sm:block">Sistem Informasi Parkir Khusus Member Berlangganan</p>
+          </div>
+        </div>
+
+        <!-- Screen Switcher Tabs -->
+        <nav class="flex items-center gap-1 sm:gap-1.5 bg-slate-900/90 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold overflow-x-auto">
+          <button onclick="switchScreen('screen-login')" id="btn-screen-login" class="screen-tab px-3 py-1.5 rounded-lg transition-all text-white bg-brand-600 shadow-md flex items-center gap-1.5 whitespace-nowrap">
+            <span>01. Login & Gateway</span>
+          </button>
+          <button onclick="switchScreen('screen-gate-in')" id="btn-screen-gate-in" class="screen-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+            <span>02. Kios Gate-In (Kiosk)</span>
+          </button>
+          <button onclick="switchScreen('screen-gate-out')" id="btn-screen-gate-out" class="screen-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+            <span>03. Pos Operator Keluar</span>
+          </button>
+          <button onclick="switchScreen('screen-kasir')" id="btn-screen-kasir" class="screen-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+            <span>04. Loket Kasir</span>
+          </button>
+          <button onclick="switchScreen('screen-admin')" id="btn-screen-admin" class="screen-tab px-3 py-1.5 rounded-lg transition-all text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+            <span>05. Dashboard Admin</span>
+          </button>
+          <button onclick="switchScreen('screen-docs')" id="btn-screen-docs" class="screen-tab px-3 py-1.5 rounded-lg transition-all text-purple-400 bg-purple-950/40 border border-purple-800/40 hover:bg-purple-900/50 flex items-center gap-1.5 whitespace-nowrap">
+            <span>06. HIPO & ERD</span>
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================= -->
+  <!-- SCREEN 1: PORTAL AKSES UTAMA (LOGIN + DUAL GATEWAY)          -->
+  <!-- ============================================================= -->
+  <main id="screen-login" class="screen-view flex-1 bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-900 flex items-center justify-center p-4 sm:p-6 lg:p-12">
+    <div class="max-w-4xl w-full bg-slate-900/80 backdrop-blur-2xl border border-slate-700/60 rounded-3xl shadow-2xl overflow-hidden grid lg:grid-cols-12">
+      
+      <!-- LEFT: Login Petugas Operasional (7 cols) -->
+      <div class="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-800">
+        <div>
+          <div class="flex items-center gap-2 mb-4">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400">Autentikasi Petugas Jaga</span>
+          </div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">Portal Operasional Petugas</h1>
+          <p class="text-xs sm:text-sm text-slate-400 mt-2">Masuk untuk mengoperasikan Pos Gerbang Keluar, Loket Administrasi Kasir, atau Monitoring Admin.</p>
+
+          <form onsubmit="handleStaffLogin(event)" class="mt-8 space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">ID / Username Petugas</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                </span>
+                <input type="text" id="loginUsername" value="KSR-01" required placeholder="Contoh: KSR-01 / OP-01 / ADM-01" class="w-full pl-10 pr-4 py-2.5 bg-slate-950/70 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono">
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Password</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </span>
+                <input type="password" id="loginPassword" value="password123" required placeholder="Masukkan kata sandi..." class="w-full pl-10 pr-10 py-2.5 bg-slate-950/70 border border-slate-700 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <button type="button" onclick="togglePasswordVisibility('loginPassword')" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Pos Jaga & Peran</label>
+              <select id="loginRole" class="w-full px-3.5 py-2.5 bg-slate-950/70 border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:ring-2 focus:ring-brand-500 font-medium">
+                <option value="kasir">Loket Kasir & Administrasi (Siti Nurhaliza)</option>
+                <option value="operator">Pos Gerbang Keluar 01 (Budi Santoso)</option>
+                <option value="admin">Pusat Admin & Pengelola Parkir (Pak Supriadi)</option>
+              </select>
+            </div>
+
+            <div class="pt-2">
+              <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-sm shadow-lg shadow-brand-600/30 transition flex items-center justify-center gap-2">
+                <span>Masuk ke Sistem Operasional</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="mt-8 pt-4 border-t border-slate-800 text-[11px] text-slate-500 flex justify-between items-center">
+          <span>Tugas MKK • Guru: Bu Fadillah</span>
+          <span class="font-mono">ERD Entity: PETUGAS</span>
+        </div>
+      </div>
+
+      <!-- RIGHT: Akses Cepat Kios Gate-In (5 cols) -->
+      <div class="lg:col-span-5 p-6 sm:p-10 bg-gradient-to-br from-emerald-950/40 via-slate-900 to-slate-950 flex flex-col justify-between">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold mb-4">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Mode Kiosk Mandiri
+          </div>
+          <h2 class="text-xl sm:text-2xl font-bold text-white tracking-tight">Kios Gerbang Masuk (Gate-In)</h2>
+          <p class="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+            Jalur masuk bersifat mandiri tanpa operator tetap. Pengendara cukup tap kartu RFID / scan QR Code digital.
+          </p>
+
+          <div class="mt-6 space-y-3 bg-slate-950/60 p-4 rounded-2xl border border-slate-800 text-xs text-slate-300">
+            <div class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Verifikasi masa aktif iuran real-time</span>
+            </div>
+            <div class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+              <span>Palang terbuka otomatis 3.5 detik</span>
+            </div>
+            <div class="flex items-center gap-2.5 text-amber-300 font-semibold">
+              <svg class="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              <span>Otorisasi PIN Numpad Cepat untuk Satpam</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8">
+          <button onclick="switchScreen('screen-gate-in')" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-extrabold rounded-xl text-sm shadow-xl shadow-emerald-500/20 transition flex items-center justify-center gap-2">
+            <span>Buka Layar Kios Gate-In</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+          </button>
+          <p class="text-[10px] text-center text-slate-500 mt-2">Dirancang khusus untuk layar sentuh terminal gerbang luar.</p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+
+  <!-- ============================================================= -->
+  <!-- SCREEN 2: KIOS MANDIRI GATE-IN (TOUCHSCREEN & PIN SATPAM)     -->
+  <!-- ============================================================= -->
+  <main id="screen-gate-in" class="screen-view hidden flex-1 bg-slate-950 text-white p-4 sm:p-6 lg:p-8 flex flex-col justify-between">
+    
+    <!-- Top Kiosk Bar -->
+    <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div class="flex items-center gap-3">
+        <span class="w-3.5 h-3.5 rounded-full bg-emerald-400 animate-ping"></span>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black font-mono tracking-wider text-emerald-400">GATE-IN-01 : GERBANG MASUK MEMBER</h1>
+          <p class="text-xs text-slate-400">Terminal Otomatis Sensor RFID & Pemindai Plat LPR</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 font-mono text-xs">
+        <div class="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="text-slate-300">RFID READER : ONLINE</span>
+        </div>
+        <div id="liveClock" class="bg-indigo-950/70 border border-indigo-500/30 text-indigo-300 px-3 py-1.5 rounded-lg font-bold">
+          --:--:-- WIB
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Kiosk Body (3 Columns) -->
+    <div class="grid lg:grid-cols-12 gap-6 my-6 items-stretch">
+      
+      <!-- Col 1: Scan Instructions & Camera LPR (3 cols) -->
+      <div class="lg:col-span-3 bg-slate-900/90 rounded-3xl border border-slate-800 p-5 flex flex-col justify-between">
+        <div>
+          <span class="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded">SENSOR KAMERA LPR</span>
+          <!-- Camera Feed Simulator -->
+          <div class="mt-3 bg-black rounded-2xl border border-slate-700 aspect-video relative overflow-hidden flex items-center justify-center">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+            <div class="text-center z-10 p-2">
+              <svg class="w-8 h-8 text-slate-600 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <div class="text-[11px] font-mono text-emerald-400 font-bold" id="lprDetectedPlate">[ SCAN PLAT : B 1234 ABC ]</div>
+            </div>
+            <div class="absolute top-2 left-2 text-[9px] font-mono bg-red-600/80 px-1.5 py-0.5 rounded text-white flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span> REC LIVE
+            </div>
+          </div>
+
+          <div class="mt-4 space-y-2 text-xs text-slate-300">
+            <p class="font-bold text-white text-sm">Petunjuk Pengendara:</p>
+            <p>1. Posisikan kendaraan tepat di depan marka batas palang.</p>
+            <p>2. Tempelkan kartu fisik RFID atau buka QR E-Card pada aplikasi.</p>
+            <p>3. Tunggu sinyal LED hijau menyala dan palang terangkat.</p>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-slate-800 text-[11px] text-slate-400">
+          Gerbang ini dipantau CCTV 24 Jam demi keamanan kendaraan Anda.
+        </div>
+      </div>
+
+      <!-- Col 2: Interactive Gate Arm & LED Sign (6 cols) -->
+      <div class="lg:col-span-6 bg-slate-900 rounded-3xl border border-slate-800 p-6 flex flex-col justify-between items-center relative overflow-hidden">
+        
+        <!-- Overhead LED Signboard -->
+        <div id="kioskLedSign" class="w-full bg-black/95 border-2 border-emerald-500/80 text-emerald-400 font-mono text-center py-3 px-4 rounded-2xl text-base sm:text-lg font-black tracking-widest shadow-inner shadow-emerald-500/20 transition-all">
+          [ STANDBY : TEMPEL KARTU MEMBER ]
+        </div>
+
+        <!-- Palang Barrier Gate Animation & Car SVG -->
+        <div class="relative w-full max-w-md h-48 flex items-end justify-center my-6">
+          <!-- Barrier Pillar Post -->
+          <div class="w-14 h-32 bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 rounded-t-xl shadow-2xl relative z-20 flex flex-col items-center pt-2">
+            <div class="w-3.5 h-3.5 rounded-full bg-slate-950 mb-2"></div>
+            <div class="w-5 h-5 rounded-full bg-slate-800 border-2 border-white shadow"></div>
+          </div>
+
+          <!-- Barrier Striped Arm -->
+          <div id="kioskBarrierArm" class="gate-arm absolute left-36 bottom-16 w-72 h-5 bg-white border border-slate-400 rounded-r-md z-10 shadow-2xl" style="background: repeating-linear-gradient(45deg, #ef4444, #ef4444 14px, #ffffff 14px, #ffffff 28px);">
+          </div>
+
+          <!-- Vehicle Silhouette -->
+          <div id="kioskCarSilhouette" class="absolute left-6 bottom-0 text-slate-500 opacity-60 transition-all duration-700">
+            <svg class="w-24 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.08 3.11H5.77L6.85 7zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"/></svg>
+          </div>
+        </div>
+
+        <!-- Simulation Scenario Test Buttons -->
+        <div class="w-full bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2">
+          <div class="flex justify-between items-center text-xs text-slate-400">
+            <span class="font-bold">Uji Coba Respon Gate (Simulasi Kartu):</span>
+            <span class="font-mono text-emerald-400">HIPO 3.0</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <button onclick="simulateKioskTap('valid')" class="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs transition flex flex-col items-center">
+              <span>Tap Member Aktif (B 1234 ABC)</span>
+              <span class="text-[10px] font-normal text-emerald-950">Palang Buka Otomatis</span>
+            </button>
+            <button onclick="simulateKioskTap('expired')" class="py-2.5 px-3 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs transition flex flex-col items-center">
+              <span>Tap Member Expired (B 9999 EXP)</span>
+              <span class="text-[10px] font-normal text-rose-200">Akses Ditolak</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Col 3: Assistance & Satpam PIN Emergency Button (3 cols) -->
+      <div class="lg:col-span-3 bg-slate-900/90 rounded-3xl border border-slate-800 p-5 flex flex-col justify-between">
+        <div>
+          <span class="text-[10px] font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-1 rounded">BANTUAN LAPANGAN</span>
+          <h3 class="text-base font-bold text-white mt-2">Pusat Kendali Bantuan</h3>
+          <p class="text-xs text-slate-400 mt-1">Jika kartu Anda tidak terbaca, masa aktif habis di depan palang, atau ada kendala teknis.</p>
+
+          <!-- Intercom Button -->
+          <div class="mt-4">
+            <button onclick="alert('Menghubungkan ke pos keamanan pusat via audio interkom...')" class="w-full py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-2 border border-slate-700 transition">
+              <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
+              <span>Hubungi Interkom Pos</span>
+            </button>
+          </div>
+
+          <!-- Highlight: Satpam / Petugas Lapangan Quick PIN Trigger -->
+          <div class="mt-6 p-4 rounded-2xl bg-amber-950/40 border-2 border-amber-500/40 space-y-2">
+            <div class="flex items-center gap-2 text-amber-300 font-bold text-xs">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+              <span>Khusus Petugas / Satpam Jaga</span>
+            </div>
+            <p class="text-[11px] text-amber-200/80 leading-relaxed">
+              Satpam yang berjaga di dekat gerbang dapat memasukkan PIN angka untuk membuka palang secara darurat atau verifikasi manual.
+            </p>
+            <button onclick="openSecurityPinModal()" class="w-full mt-2 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black rounded-xl text-xs shadow-lg shadow-amber-500/20 transition flex items-center justify-center gap-1.5">
+              <span>Buka Numpad PIN Satpam</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-4 border-t border-slate-800 flex justify-between items-center text-[10px] text-slate-500">
+          <span>SIP-Member Kiosk Engine</span>
+          <button onclick="switchScreen('screen-login')" class="text-indigo-400 hover:underline">← Keluar Kiosk</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Real-time Telemetry -->
+    <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-800 text-xs font-mono text-slate-400 flex flex-wrap justify-between items-center gap-2">
+      <div class="flex items-center gap-2">
+        <span class="text-emerald-400">[LOG TERBARU]</span>
+        <span id="kioskRecentLog">Sistem gerbang standby. Menunggu pembacaan kartu member...</span>
+      </div>
+      <div>
+        Status Palang: <span id="kioskGateStateText" class="font-bold text-rose-400">TERTUTUP (LOCKED)</span>
+      </div>
+    </div>
+  </main>
+
+
+  <!-- ============================================================= -->
+  <!-- SCREEN 3: POS OPERATOR GERBANG KELUAR (GATE-OUT)              -->
+  <!-- ============================================================= -->
+  <main id="screen-gate-out" class="screen-view hidden flex-1 bg-slate-100 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto space-y-6">
+      
+      <!-- Operator Top Banner -->
+      <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-indigo-100 text-brand-700 flex items-center justify-center font-bold text-base">
+            G-OUT
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-lg font-bold text-slate-900">Pos Kerja Gerbang Keluar 01</h1>
+              <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Shift Pagi • Online</span>
+            </div>
+            <p class="text-xs text-slate-500">Operator Jaga: <span class="font-semibold text-slate-700" id="currentOperatorName">Budi Santoso (OP-01)</span> • Validasi Sesi Parkir (HIPO 4.0)</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="triggerEmergencyGateOut()" class="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span>Buka Palang Darurat</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main Operational Split (Left 60% : Right 40%) -->
+      <div class="grid lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Dual Cameras & Match Comparison (7 cols) -->
+        <div class="lg:col-span-7 space-y-6">
+          
+          <!-- Dual Camera Cards -->
+          <div class="grid sm:grid-cols-2 gap-4">
+            <div class="bg-slate-900 text-white p-3 rounded-2xl border border-slate-800">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-[10px] font-mono text-slate-400 font-bold">KAMERA DEPAN (LPR)</span>
+                <span class="text-[9px] bg-red-600 px-1.5 py-0.5 rounded text-white">LIVE</span>
+              </div>
+              <div class="bg-black rounded-xl aspect-video flex items-center justify-center relative overflow-hidden border border-slate-800">
+                <div class="font-mono text-lg font-black text-amber-300 bg-black/80 px-3 py-1 rounded border border-amber-400/50">
+                  B 1234 ABC
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-slate-900 text-white p-3 rounded-2xl border border-slate-800">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-[10px] font-mono text-slate-400 font-bold">CCTV GERBANG KELUAR</span>
+                <span class="text-[9px] bg-red-600 px-1.5 py-0.5 rounded text-white">LIVE</span>
+              </div>
+              <div class="bg-black rounded-xl aspect-video flex items-center justify-center relative overflow-hidden border border-slate-800 text-slate-500">
+                <svg class="w-10 h-10 opacity-40" fill="currentColor" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.85 7h10.29l1.08 3.11H5.77L6.85 7zM19 17H5v-4.66l.12-.34h13.77l.11.34V17z"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hasil Tap Kartu Keluar & Match Check (HIPO 4.2) -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900">Validasi Hasil Tap Kartu Keluar</h3>
+                <p class="text-xs text-slate-500">Memeriksa kesesuaian identitas kendaraan dengan database member.</p>
+              </div>
+              <span class="text-xs font-mono font-bold bg-indigo-50 text-brand-700 px-2.5 py-1 rounded-lg">HIPO 4.1 & 4.2</span>
+            </div>
+
+            <!-- Plate Match Checker Badge -->
+            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold">
+                  ✓
+                </div>
+                <div>
+                  <div class="text-xs font-bold text-emerald-900">PLAT KENDARAAN COCOK (MATCH)</div>
+                  <div class="text-xs text-emerald-700">Plat terdeteksi kamera kamera keluar sama dengan database member terdaftar.</div>
+                </div>
+              </div>
+              <span class="text-xs font-mono font-bold bg-white text-emerald-800 px-2.5 py-1 rounded shadow-sm border border-emerald-200">VALID 100%</span>
+            </div>
+
+            <div class="grid sm:grid-cols-2 gap-4 text-xs">
+              <div class="p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-500 block mb-0.5">Nama Member:</span>
+                <span class="font-bold text-slate-900 text-sm">Ahmad Favian (MBR-2026-001)</span>
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-500 block mb-0.5">Kendaraan & Plat:</span>
+                <span class="font-mono font-bold text-slate-900 text-sm">B 1234 ABC</span> (Mobil - Honda HR-V)
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-500 block mb-0.5">Masa Berlaku Iuran:</span>
+                <span class="font-bold text-emerald-600 text-sm">s/d 20 November 2026</span> (Aktif)
+              </div>
+              <div class="p-3 bg-slate-50 rounded-xl">
+                <span class="text-slate-500 block mb-0.5">Metode Akses:</span>
+                <span class="font-semibold text-slate-700">Kartu RFID Fisik (Mifare 13.56MHz)</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Right: Session Details & Release Trigger (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+            <h3 class="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">Ringkasan Sesi Parkir Ini</h3>
+
+            <div class="space-y-3 text-xs">
+              <div class="flex justify-between py-1 border-b border-slate-100">
+                <span class="text-slate-500">ID Sesi Parkir:</span>
+                <span class="font-mono font-bold text-slate-800">TRX-PRK-88192</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-100">
+                <span class="text-slate-500">Waktu Masuk (Gate-In 01):</span>
+                <span class="font-mono font-semibold text-slate-800">10:15 WIB (Hari Ini)</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-100">
+                <span class="text-slate-500">Waktu Keluar (Gate-Out 01):</span>
+                <span class="font-mono font-semibold text-emerald-600" id="gateOutExitTime">14:30 WIB (Sekarang)</span>
+              </div>
+              <div class="flex justify-between py-1 border-b border-slate-100">
+                <span class="text-slate-500">Total Durasi Parkir:</span>
+                <span class="font-bold text-slate-900">4 Jam 15 Menit</span>
+              </div>
+              <div class="flex justify-between items-center py-2 bg-indigo-50/70 p-3 rounded-xl border border-indigo-100">
+                <div>
+                  <span class="text-[11px] font-semibold text-indigo-900 block">Tarif Tambahan:</span>
+                  <span class="text-[10px] text-indigo-700">Member Bulanan Bebas Biaya</span>
+                </div>
+                <div class="text-lg font-mono font-extrabold text-brand-700">
+                  Rp 0,-
+                </div>
+              </div>
+            </div>
+
+            <!-- Barrier State Status -->
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
+              <span class="text-xs text-slate-500 block mb-1">Status Palang Keluar:</span>
+              <span id="gateOutArmStatus" class="font-mono font-extrabold text-sm text-rose-600">TERTUTUP (MENUNGGU KONFIRMASI)</span>
+            </div>
+
+            <!-- Big Confirmation Action Button -->
+            <button onclick="confirmReleaseGateOut()" id="btnConfirmRelease" class="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-sm shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Konfirmasi & Buka Palang Keluar</span>
+            </button>
+            <p class="text-[11px] text-center text-slate-400">Shortcut: Tekan Space atau Enter pada keyboard petugas.</p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+
+  <!-- ============================================================= -->
+  <!-- SCREEN 4: LOKET KASIR ADMINISTRASI (HIPO 1.0 & 2.0)           -->
+  <!-- ============================================================= -->
+  <main id="screen-kasir" class="screen-view hidden flex-1 bg-slate-50 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto space-y-6">
+      
+      <!-- Sub-Navigation Tabs for Cashier Workspace -->
+      <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900">Loket Administrasi & Kasir Member</h1>
+          <p class="text-xs text-slate-500">Pendaftaran Member Baru, Pembayaran Iuran Bulanan & Rekap Data</p>
+        </div>
+
+        <div class="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200 text-xs font-bold">
+          <button onclick="switchKasirTab('tab-registrasi')" id="btn-tab-reg" class="kasir-subtab px-3.5 py-2 rounded-lg bg-brand-600 text-white shadow-sm transition">
+            1. Pendaftaran Member Baru (HIPO 1.1)
+          </button>
+          <button onclick="switchKasirTab('tab-pembayaran')" id="btn-tab-pay" class="kasir-subtab px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition">
+            2. Pembayaran Iuran (HIPO 2.2)
+          </button>
+          <button onclick="switchKasirTab('tab-data-member')" id="btn-tab-dat" class="kasir-subtab px-3.5 py-2 rounded-lg text-slate-600 hover:text-slate-900 transition">
+            3. Kelola Data Member (HIPO 1.3)
+          </button>
+        </div>
+      </div>
+
+      <!-- TAB 1: FORM PENDAFTARAN LENGKAP DENGAN ATRIBUT ERD LENGKAP -->
+      <div id="kasir-view-reg" class="kasir-content bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
+        <div class="border-b border-slate-100 pb-4 mb-6">
+          <span class="text-xs font-mono font-bold text-brand-700 bg-brand-50 px-2 py-1 rounded">HIPO 1.1 & 1.2 • ENTITAS MEMBER & KENDARAAN</span>
+          <h2 class="text-lg font-bold text-slate-900 mt-2">Formulir Registrasi Member & Kendaraan Baru</h2>
+          <p class="text-xs text-slate-500">Seluruh field di bawah telah disinkronkan 100% dengan rancangan Entity Relationship Diagram (ERD).</p>
+        </div>
+
+        <form onsubmit="handleFullRegistration(event)" class="space-y-6">
+          <!-- Section 1: Identitas Member -->
+          <div>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">A. Data Identitas Member (Entitas: MEMBER)</h3>
+            <div class="grid sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Nama Lengkap Member *</label>
+                <input type="text" id="regFullName" required placeholder="Contoh: Muhammad Farhan" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp / HP *</label>
+                <input type="tel" id="regPhoneFull" required placeholder="0812-xxxx-xxxx" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">UID Kartu RFID Fisik *</label>
+                <div class="flex gap-2">
+                  <input type="text" id="regRfidUid" required value="RFID-88219" class="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm font-mono font-bold text-brand-700 outline-none" readonly>
+                  <button type="button" onclick="scanRandomRfid()" class="px-3 py-2 bg-indigo-50 text-brand-700 border border-indigo-200 rounded-xl text-xs font-bold hover:bg-indigo-100">Tap</button>
+                </div>
+              </div>
+              <div class="sm:col-span-3">
+                <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Lengkap Domisili (Atribut ERD: alamat) *</label>
+                <input type="text" id="regAddress" required placeholder="Contoh: Jl. Kemang Raya No. 45, Jakarta Selatan" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Data Kendaraan (Relasi 1:N) -->
+          <div class="pt-4 border-t border-slate-100">
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-slate-400 mb-3">B. Data Fisik Kendaraan (Entitas: KENDARAAN)</h3>
+            <div class="grid sm:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Jenis Kendaraan *</label>
+                <select id="regVehicleType" onchange="updateRegistrationTariff()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold focus:ring-2 focus:ring-brand-500 outline-none">
+                  <option value="Mobil">Mobil (Rp 150.000 / bln)</option>
+                  <option value="Motor">Motor (Rp 50.000 / bln)</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Nomor Plat (PK) *</label>
+                <input type="text" id="regPlateFull" required placeholder="B 2345 DEF" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold uppercase focus:ring-2 focus:ring-brand-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Merk / Model Kendaraan *</label>
+                <input type="text" id="regBrandFull" required placeholder="Contoh: Toyota Avanza" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Warna Kendaraan (Atribut ERD) *</label>
+                <input type="text" id="regColorFull" required placeholder="Contoh: Hitam Metalik" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-brand-500 outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Ringkasan Biaya Registrasi Awal -->
+          <div class="p-4 rounded-2xl bg-indigo-50 border border-indigo-100 flex flex-wrap justify-between items-center gap-3">
+            <div>
+              <span class="text-xs text-indigo-900 font-bold block">Biaya Langganan Bulan Pertama:</span>
+              <span class="text-xs text-indigo-700">Masa aktif langsung berlaku 30 hari sejak verifikasi berhasil.</span>
+            </div>
+            <div class="text-xl font-mono font-black text-brand-700" id="regInitialTariffDisplay">
+              Rp 150.000,-
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-2">
+            <button type="reset" class="px-5 py-2.5 bg-slate-100 text-slate-600 font-bold text-xs rounded-xl hover:bg-slate-200 transition">Reset Form</button>
+            <button type="submit" class="px-6 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-brand-500/20 transition flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Simpan & Daftarkan Member Baru</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- TAB 2: PEMBAYARAN IURAN BULANAN (TARIF DINAMIS MOTOR & MOBIL) -->
+      <div id="kasir-view-pay" class="kasir-content hidden bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-sm">
+        <div class="border-b border-slate-100 pb-4 mb-6">
+          <span class="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded">HIPO 2.0 • ENTITAS PEMBAYARAN</span>
+          <h2 class="text-lg font-bold text-slate-900 mt-2">Perpanjangan Iuran Bulanan Member</h2>
+          <p class="text-xs text-slate-500">Tarif otomatis menyesuaikan jenis kendaraan (Motor: Rp 50.000 / Mobil: Rp 150.000).</p>
+        </div>
+
+        <form onsubmit="handleExecutePayment(event)" class="max-w-2xl space-y-5">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Member yang Membayar:</label>
+            <select id="paySelectMember" onchange="syncPayFormMember()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-brand-500 outline-none">
+              <option value="MBR-2026-001|Ahmad Favian|Mobil|150000|B 1234 ABC">Ahmad Favian (MBR-2026-001) — Mobil (B 1234 ABC)</option>
+              <option value="MBR-2026-002|Siti Rahmawati|Mobil|150000|D 8888 SITI">Siti Rahmawati (MBR-2026-002) — Mobil (D 8888 SITI)</option>
+              <option value="MBR-2026-003|Budi Santoso|Motor|50000|B 9999 EXP">Budi Santoso (MBR-2026-003) — Motor (B 9999 EXP)</option>
+            </select>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Pilihan Durasi Perpanjangan:</label>
+              <select id="payDurationSelect" onchange="recalculatePayTotal()" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                <option value="1">1 Bulan (Normal)</option>
+                <option value="3">3 Bulan (Diskon 5%)</option>
+                <option value="6">6 Bulan (Diskon 8%)</option>
+                <option value="12">12 Bulan / 1 Tahun (Diskon 12%)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Metode Pembayaran:</label>
+              <select id="payMethodSelect" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-2 focus:ring-brand-500 outline-none">
+                <option value="Tunai / Kasir">Tunai (Loket Kasir)</option>
+                <option value="QRIS">QRIS Dinamis</option>
+                <option value="Transfer Bank">Transfer Virtual Account</option>
+                <option value="Debit Card">Kartu Debit</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Total Calculation Display Card -->
+          <div class="p-5 rounded-2xl bg-slate-900 text-white flex justify-between items-center">
+            <div>
+              <span class="text-xs text-slate-400 font-medium block">Total yang Harus Dibayar:</span>
+              <div class="text-2xl font-mono font-black text-emerald-400" id="payTotalCalculated">
+                Rp 150.000,-
+              </div>
+            </div>
+            <div class="text-right text-xs text-slate-400">
+              <span class="bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-mono" id="payVehicleBadge">Mobil</span>
+              <p class="mt-1" id="payExpiryPreview">Masa aktif baru: +1 Bulan</p>
+            </div>
+          </div>
+
+          <button type="submit" class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-extrabold rounded-xl text-sm shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            <span>Simpan Pembayaran & Cetak Kuitansi Resmi (HIPO 2.4)</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- TAB 3: DATA MASTER MEMBER DENGAN PENCARIAN & STATUS -->
+      <div id="kasir-view-dat" class="kasir-content hidden bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-200 flex flex-wrap justify-between items-center gap-3">
+          <div>
+            <h2 class="text-base font-bold text-slate-900">Daftar Member & Kendaraan Aktif</h2>
+            <p class="text-xs text-slate-500">Mencatat relasi antara tabel MEMBER dan KENDARAAN.</p>
+          </div>
+          <input type="text" id="kasirMemberFilterInput" onkeyup="filterMemberDataRows()" placeholder="Cari nama atau nomor plat..." class="text-xs px-3.5 py-2 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500 w-64">
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs" id="tableMasterMember">
+            <thead class="bg-slate-50 text-slate-500 border-b border-slate-200 font-bold uppercase tracking-wider">
+              <tr>
+                <th class="py-3 px-4">ID Member</th>
+                <th class="py-3 px-4">Nama & Kontak</th>
+                <th class="py-3 px-4">Plat & Kendaraan</th>
+                <th class="py-3 px-4">Jatuh Tempo</th>
+                <th class="py-3 px-4">Status</th>
+                <th class="py-3 px-4 text-center">Aksi (HIPO 1.3/1.4)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-medium text-slate-700" id="kasirMemberTableBody">
+              <!-- Ahmad Favian -->
+              <tr class="hover:bg-slate-50 transition">
+                <td class="py-3.5 px-4 font-mono font-bold text-brand-700">MBR-2026-001</td>
+                <td class="py-3.5 px-4">
+                  <div class="font-bold text-slate-900">Ahmad Favian</div>
+                  <div class="text-[11px] text-slate-400">0812-3456-7890 • Jakarta</div>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">B 1234 ABC</span>
+                  <span class="text-slate-400 text-[11px] ml-1">(Mobil - Honda HR-V)</span>
+                </td>
+                <td class="py-3.5 px-4 font-mono text-emerald-600 font-semibold">2026-11-20</td>
+                <td class="py-3.5 px-4">
+                  <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Aktif</span>
+                </td>
+                <td class="py-3.5 px-4 text-center">
+                  <button onclick="triggerQuickPayFor('MBR-2026-001')" class="px-2.5 py-1 bg-indigo-50 text-brand-700 hover:bg-indigo-100 rounded font-bold text-[11px]">+ Iuran</button>
+                </td>
+              </tr>
+              <!-- Siti Rahmawati -->
+              <tr class="hover:bg-slate-50 transition">
+                <td class="py-3.5 px-4 font-mono font-bold text-brand-700">MBR-2026-002</td>
+                <td class="py-3.5 px-4">
+                  <div class="font-bold text-slate-900">Siti Rahmawati</div>
+                  <div class="text-[11px] text-slate-400">0857-1122-3344 • Bandung</div>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">D 8888 SITI</span>
+                  <span class="text-slate-400 text-[11px] ml-1">(Mobil - Yaris)</span>
+                </td>
+                <td class="py-3.5 px-4 font-mono text-emerald-600 font-semibold">2026-10-15</td>
+                <td class="py-3.5 px-4">
+                  <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Aktif</span>
+                </td>
+                <td class="py-3.5 px-4 text-center">
+                  <button onclick="triggerQuickPayFor('MBR-2026-002')" class="px-2.5 py-1 bg-indigo-50 text-brand-700 hover:bg-indigo-100 rounded font-bold text-[11px]">+ Iuran</button>
+                </td>
+              </tr>
+              <!-- Budi Santoso -->
+              <tr class="hover:bg-slate-50 transition bg-rose-50/20">
+                <td class="py-3.5 px-4 font-mono font-bold text-brand-700">MBR-2026-003</td>
+                <td class="py-3.5 px-4">
+                  <div class="font-bold text-slate-900">Budi Santoso</div>
+                  <div class="text-[11px] text-slate-400">0813-9988-7766 • Depok</div>
+                </td>
+                <td class="py-3.5 px-4">
+                  <span class="font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">B 9999 EXP</span>
+                  <span class="text-slate-400 text-[11px] ml-1">(Motor - Vario)</span>
+                </td>
+                <td class="py-3.5 px-4 font-mono text-rose-600 font-semibold">2026-08-01</td>
+                <td class="py-3.5 px-4">
+                  <span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Kedaluwarsa</span>
+                </td>
+                <td class="py-3.5 px-4 text-center">
+                  <button onclick="triggerQuickPayFor('MBR-2026-003')" class="px-2.5 py-1 bg-emerald-600 text-white hover:bg-emerald-500 rounded font-bold text-[11px]">Perpanjang</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+
+  <!-- ============================================================= -->
+  <!-- SCREEN 5: DASHBOARD MONITORING & LAPORAN MANAJEMEN (HIPO 5.0) -->
+  <!-- ============================================================= -->
+  <main id="screen-admin" class="screen-view hidden flex-1 bg-slate-50 p-4 sm:p-6 lg:p-8">
+    <div class="max-w-7xl mx-auto space-y-6">
+      
+      <!-- Top Title & Export Controls -->
+      <div class="flex flex-wrap items-center justify-between gap-4 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold text-slate-900">Dasbor Eksekutif & Laporan Manajemen</h1>
+            <span class="bg-purple-100 text-purple-800 text-xs font-bold px-2.5 py-0.5 rounded border border-purple-200">Admin: Pak Supriadi</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1">Monitoring real-time traffic gate, rekap pendapatan iuran bulanan (HIPO 5.1), dan kunjungan kendaraan (HIPO 5.2).</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="alert('Laporan berhasil diekspor ke Excel (.xlsx)!')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            <span>Export Excel</span>
+          </button>
+          <button onclick="window.print()" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+            <span>Cetak PDF</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 KPI Metrics Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-500 font-semibold">Total Member Terdaftar</span>
+          <div class="flex items-baseline justify-between mt-2">
+            <span class="text-2xl font-black text-slate-900" id="dashTotalMembers">142</span>
+            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">+12 Bulan Ini</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-500 font-semibold">Okupansi Slot Member</span>
+          <div class="flex items-baseline justify-between mt-2">
+            <span class="text-2xl font-black text-indigo-600">38 / 60</span>
+            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">63% Kapasitas</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-500 font-semibold">Total Kas Iuran (Bulan Ini)</span>
+          <div class="flex items-baseline justify-between mt-2">
+            <span class="text-xl sm:text-2xl font-black text-emerald-600">Rp 18.250.000</span>
+            <span class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">HIPO 5.1</span>
+          </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+          <span class="text-xs text-slate-500 font-semibold">Bypass PIN Satpam Hari Ini</span>
+          <div class="flex items-baseline justify-between mt-2">
+            <span class="text-2xl font-black text-amber-600" id="dashBypassCount">2 Kali</span>
+            <span class="text-[10px] font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded">Audit Aman</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Split Section: Financial Report (HIPO 5.1) & Visit Log Report (HIPO 5.2) -->
+      <div class="grid lg:grid-cols-2 gap-6">
+        
+        <!-- HIPO 5.1: Rekap Iuran Bulanan -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">Laporan Penerimaan Iuran (HIPO 5.1)</h2>
+              <p class="text-xs text-slate-500">Perbandingan target dan realisasi kas bulanan.</p>
+            </div>
+            <span class="text-xs font-mono font-bold text-brand-600">Q3-Q4 2026</span>
+          </div>
+
+          <div class="space-y-3 pt-2">
+            <div>
+              <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                <span>September 2026 (Bulan Berjalan)</span>
+                <span>Rp 18.250.000 / Rp 20.000.000 (91%)</span>
+              </div>
+              <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                <div class="bg-emerald-500 h-full rounded-full" style="width: 91%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                <span>Agustus 2026</span>
+                <span>Rp 19.800.000 / Rp 20.000.000 (99%)</span>
+              </div>
+              <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                <div class="bg-brand-600 h-full rounded-full" style="width: 99%"></div>
+              </div>
+            </div>
+            <div>
+              <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                <span>Juli 2026</span>
+                <span>Rp 17.500.000 / Rp 18.000.000 (97%)</span>
+              </div>
+              <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                <div class="bg-indigo-400 h-full rounded-full" style="width: 97%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HIPO 5.2: Laporan Kunjungan Parkir -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex justify-between items-center">
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">Laporan Kunjungan Parkir (HIPO 5.2)</h2>
+              <p class="text-xs text-slate-500">Statistik aktivitas keluar-masuk kendaraan member.</p>
+            </div>
+            <span class="text-xs font-mono font-bold text-brand-600">Hari Ini</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <div class="p-3 bg-slate-50 rounded-xl">
+              <span class="text-slate-500 block">Total Masuk Hari Ini:</span>
+              <span class="text-lg font-bold text-emerald-600">84 Kendaraan</span>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-xl">
+              <span class="text-slate-500 block">Total Keluar Hari Ini:</span>
+              <span class="text-lg font-bold text-indigo-600">46 Kendaraan</span>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-xl">
+              <span class="text-slate-500 block">Rata-rata Durasi Parkir:</span>
+              <span class="text-sm font-bold text-slate-800">3 Jam 42 Menit</span>
+            </div>
+            <div class="p-3 bg-slate-50 rounded-xl">
+              <span class="text-slate-500 block">Jam Paling Padat (Peak):</span>
+              <span class="text-sm font-bold text-amber-600">07:30 - 08:45 WIB</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Real-Time Activity & Audit Log Feed -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex justify-between items-center">
+          <div>
+            <h2 class="text-sm font-bold text-slate-900">Log Aktivitas Gate & Audit Otorisasi PIN</h2>
+            <p class="text-xs text-slate-500">Mencatat seluruh pembacaan RFID, penolakan akses, dan override satpam.</p>
+          </div>
+          <button onclick="clearSystemAuditLogs()" class="text-xs text-slate-400 hover:text-slate-600">Bersihkan Log</button>
+        </div>
+
+        <div class="bg-slate-950 p-4 rounded-xl font-mono text-xs text-slate-300 space-y-2 max-h-56 overflow-y-auto" id="systemAuditFeed">
+          <div class="text-amber-400">[22:35:12] [GATE-IN-01] [OVERRIDE PIN] Satpam Joko memasukkan PIN Cepat. Alasan: 'Kartu Rusak / Gores'. Palang Masuk Terbuka.</div>
+          <div class="text-emerald-400">[22:20:45] [GATE-IN-01] Tap RFID B 1234 ABC — Member Aktif (Ahmad Favian). Palang Terbuka.</div>
+          <div class="text-indigo-400">[22:15:02] [GATE-OUT-01] Operator Budi mengonfirmasi rilis kendaraan B 1234 ABC. Palang Keluar Terbuka.</div>
+          <div class="text-rose-400">[21:55:10] [GATE-IN-01] [ACCESS DENIED] Tap RFID B 9999 EXP — Akun Kadaluarsa sejak 01 Agu 2026. Palang Tetap Terkunci.</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+
+  <!-- ============================================================= -->
+  <!-- SCREEN 6: DOKUMENTASI HIPO & ERD LENGKAP                     -->
+  <!-- ============================================================= -->
+  <main id="screen-docs" class="screen-view hidden flex-1 bg-white p-4 sm:p-6 lg:p-8">
+    <div class="max-w-5xl mx-auto space-y-8">
+      
+      <div class="text-center max-w-2xl mx-auto">
+        <span class="text-xs font-mono font-bold text-purple-700 bg-purple-100 px-3 py-1 rounded-full uppercase">Dokumentasi Tugas Siswa</span>
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-2">Pemetaan Sistem ke LKPD Bu Fadillah</h1>
+        <p class="text-xs sm:text-sm text-slate-600 mt-1">Seluruh 18 subproses HIPO dan 5 entitas ERD telah diimplementasikan 100% pada antarmuka aplikasi ini.</p>
+      </div>
+
+      <!-- HIPO Checklist Grid -->
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <span class="font-mono font-bold text-brand-700 block mb-1">HIPO 1.0 : DATA MEMBER</span>
+          <ul class="space-y-1 text-slate-600">
+            <li>✓ 1.1 Input Data Member Lengkap</li>
+            <li>✓ 1.2 Registrasi Plat Kendaraan (1:N)</li>
+            <li>✓ 1.3 Ubah Data Member</li>
+            <li>✓ 1.4 Nonaktifkan Member</li>
+          </ul>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <span class="font-mono font-bold text-brand-700 block mb-1">HIPO 2.0 : PEMBAYARAN IURAN</span>
+          <ul class="space-y-1 text-slate-600">
+            <li>✓ 2.1 Cek Tagihan Member</li>
+            <li>✓ 2.2 Input Bayar Bulanan</li>
+            <li>✓ 2.3 Perpanjang Masa Aktif</li>
+            <li>✓ 2.4 Cetak Kuitansi Bukti Bayar</li>
+          </ul>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <span class="font-mono font-bold text-emerald-700 block mb-1">HIPO 3.0 : PARKIR MASUK</span>
+          <ul class="space-y-1 text-slate-600">
+            <li>✓ 3.1 Scan Kartu di Gerbang Masuk</li>
+            <li>✓ 3.2 Cek Status Aktif Member</li>
+            <li>✓ 3.3 Catat Waktu Masuk ke DB</li>
+            <li>✓ 3.4 Buka Palang Pintu Masuk</li>
+          </ul>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <span class="font-mono font-bold text-indigo-700 block mb-1">HIPO 4.0 : PARKIR KELUAR</span>
+          <ul class="space-y-1 text-slate-600">
+            <li>✓ 4.1 Scan Kartu di Gerbang Keluar</li>
+            <li>✓ 4.2 Validasi Sesi Parkir Masuk</li>
+            <li>✓ 4.3 Catat Waktu Keluar & Durasi</li>
+            <li>✓ 4.4 Buka Palang Pintu Keluar</li>
+          </ul>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200">
+          <span class="font-mono font-bold text-purple-700 block mb-1">HIPO 5.0 : LAPORAN</span>
+          <ul class="space-y-1 text-slate-600">
+            <li>✓ 5.1 Cetak Laporan Iuran Bulanan</li>
+            <li>✓ 5.2 Cetak Laporan Kunjungan Parkir</li>
+            <li>✓ Audit Log Bypass PIN Satpam</li>
+          </ul>
+        </div>
+
+        <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200">
+          <span class="font-mono font-bold text-amber-800 block mb-1">FITUR UNGGULAN OPERASIONAL</span>
+          <p class="text-amber-900 leading-relaxed">
+            Menambahkan PIN Numpad 6-digit untuk satpam lapangan di Kios Gate-In tanpa harus membuka akun admin penuh.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+
+  <!-- ============================================================= -->
+  <!-- MODAL: PIN NUMPAD 6-DIGIT SATPAM LAPANGAN (SECURITY OVERRIDE) -->
+  <!-- ============================================================= -->
+  <div id="securityPinModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-6 text-white shadow-2xl space-y-4">
+      
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">PIN Akses Cepat Satpam</h3>
+            <p class="text-[10px] text-slate-400">Otorisasi darurat pembukaan palang masuk</p>
+          </div>
+        </div>
+        <button onclick="closeSecurityPinModal()" class="text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <!-- 6-Dot Masked Display -->
+      <div class="text-center py-2">
+        <span class="text-xs text-slate-400 block mb-2">Ketik 6 digit PIN Petugas Lapangan:</span>
+        <div class="flex justify-center gap-2" id="pinDotsContainer">
+          <span class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-800" id="dot-0"></span>
+          <span class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-800" id="dot-1"></span>
+          <span class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-800" id="dot-2"></span>
+          <span class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-800" id="dot-3"></span>
+          <span class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-800" id="dot-4"></span>
+          <span class="w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-800" id="dot-5"></span>
+        </div>
+        <div id="pinErrorMsg" class="text-rose-400 text-xs font-semibold mt-2 hidden">PIN salah! Coba lagi. (Default: 123456)</div>
+      </div>
+
+      <!-- Alasan Bypass Dropdown -->
+      <div>
+        <label class="block text-[11px] font-bold text-slate-400 mb-1">Alasan Pembukaan Palang:</label>
+        <select id="pinOverrideReason" class="w-full px-3 py-2 bg-slate-950 border border-slate-700 rounded-xl text-xs text-white outline-none">
+          <option value="Kartu Rusak / Chip Gores">Kartu Rusak / Chip Gores</option>
+          <option value="Iuran Baru Dibayar Manual di Kasir">Iuran Baru Dibayar Manual di Kasir</option>
+          <option value="Ambulans / Keadaan Darurat Lapangan">Ambulans / Keadaan Darurat Lapangan</option>
+          <option value="Instruksi Khusus Komandan Regu">Instruksi Khusus Komandan Regu</option>
+        </select>
+      </div>
+
+      <!-- Touch Numpad Grid (1-9, C, 0, Ok) -->
+      <div class="grid grid-cols-3 gap-2 pt-2">
+        <button onclick="pressPinKey('1')" class="py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-mono text-lg font-bold">1</button>
+        <button onclick="pressPinKey('2')" class="py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-mono text-lg font-bold">2</button>
+        <button onclick="pressPinKey('3')" class="py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-mono text-lg font-bold">3</button>
+        <button onclick="pressPinKey('4')" class="py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-mono text-lg font-bold">4</button>
+        <button onclick="pressPinKey('5')" class="py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-mono text-lg font-bold">5</button>
+        <button onclick="pressPinKey('6')" class="py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-mono text-lg font-bold">6</button>
+        <button onclick="pressPinKey('7')" class="py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-mono text-lg font-bold">7</button>
+        <button onclick="pressPinKey('8')" class="py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-mono text-lg font-bold">8</button>
+        <button onclick="pressPinKey('9')" class="py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-mono text-lg font-bold">9</button>
+        <button onclick="clearPinKey()" class="py-3 bg-rose-950/50 text-rose-400 hover:bg-rose-900/50 rounded-xl font-mono text-xs font-bold">HAPUS</button>
+        <button onclick="pressPinKey('0')" class="py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-mono text-lg font-bold">0</button>
+        <button onclick="submitPinKey()" class="py-3 bg-emerald-600 text-slate-950 hover:bg-emerald-500 rounded-xl font-mono text-xs font-black">BUKA ➔</button>
+      </div>
+
+      <div class="text-[10px] text-center text-slate-500">
+        Default PIN demo: <span class="font-mono text-slate-400">123456</span> (Setiap aksi dicatat di audit log).
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================= -->
+  <!-- MODAL: KUITANSI RESMI PEMBAYARAN IURAN (HIPO 2.4)             -->
+  <!-- ============================================================= -->
+  <div id="receiptPrintModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-slate-900 shadow-2xl space-y-4">
+      
+      <!-- Printable Area -->
+      <div id="printReceiptArea" class="space-y-4">
+        <div class="text-center border-b-2 border-dashed border-slate-200 pb-4">
+          <div class="w-10 h-10 rounded-xl bg-brand-600 text-white font-bold flex items-center justify-center mx-auto mb-2 text-sm">
+            SIP
+          </div>
+          <h2 class="font-black text-slate-900 text-base">SIP-MEMBER PARKING</h2>
+          <p class="text-[10px] text-slate-500">Gedung Parkir Terpadu • Kelompok 2 XI RPL 2</p>
+          <span class="inline-block bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">KUITANSI LUNAS</span>
+        </div>
+
+        <div class="space-y-2 text-xs border-b-2 border-dashed border-slate-200 pb-4">
+          <div class="flex justify-between">
+            <span class="text-slate-500">No. Bukti:</span>
+            <span class="font-mono font-bold" id="recTrxId">TRX-2026-99120</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Nama Member:</span>
+            <span class="font-bold" id="recMemberName">Ahmad Favian</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Plat / Jenis:</span>
+            <span class="font-mono font-bold" id="recPlateType">B 1234 ABC (Mobil)</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Durasi Perpanjang:</span>
+            <span class="font-semibold" id="recDuration">1 Bulan</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Masa Aktif Baru:</span>
+            <span class="font-mono font-bold text-emerald-600" id="recNewExpiry">20 Des 2026</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-500">Kasir:</span>
+            <span id="recCashierName">Siti Nurhaliza (KSR-01)</span>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-1">
+          <span class="text-xs font-bold text-slate-700">Total Dibayar:</span>
+          <span class="text-lg font-mono font-black text-brand-700" id="recTotalAmount">Rp 150.000</span>
+        </div>
+      </div>
+
+      <div class="flex gap-2 pt-2 border-t border-slate-100">
+        <button onclick="closeReceiptModal()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">Tutup</button>
+        <button onclick="window.print()" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          <span>Cetak Bukti</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================= -->
+  <!-- JAVASCRIPT STATE ENGINE & INTERACTIVE LOGIC                   -->
+  <!-- ============================================================= -->
+  <script>
+    // Live Clock for Kiosk
+    setInterval(() => {
+      const now = new Date();
+      const clockEl = document.getElementById('liveClock');
+      if (clockEl) {
+        clockEl.innerText = now.toLocaleTimeString('id-ID') + ' WIB';
+      }
+    }, 1000);
+
+    // Screen Switcher
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen-view').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.screen-tab').forEach(el => {
+        el.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+        el.classList.add('text-slate-400');
+      });
+
+      const activeView = document.getElementById(screenId);
+      const activeBtn = document.getElementById('btn-' + screenId);
+
+      if (activeView) activeView.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.classList.remove('text-slate-400');
+        activeBtn.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Staff Login Logic
+    function handleStaffLogin(e) {
+      e.preventDefault();
+      const role = document.getElementById('loginRole').value;
+      if (role === 'kasir') {
+        switchScreen('screen-kasir');
+      } else if (role === 'operator') {
+        switchScreen('screen-gate-out');
+      } else if (role === 'admin') {
+        switchScreen('screen-admin');
+      }
+    }
+
+    function togglePasswordVisibility(id) {
+      const el = document.getElementById(id);
+      if (el) el.type = el.type === 'password' ? 'text' : 'password';
+    }
+
+    // Kiosk Gate Simulation Logic
+    function simulateKioskTap(status) {
+      const arm = document.getElementById('kioskBarrierArm');
+      const sign = document.getElementById('kioskLedSign');
+      const car = document.getElementById('kioskCarSilhouette');
+      const log = document.getElementById('kioskRecentLog');
+      const stateText = document.getElementById('kioskGateStateText');
+
+      if (status === 'valid') {
+        sign.innerText = 'STATUS: MEMBER AKTIF (SILAKAN MASUK)';
+        sign.className = 'w-full bg-emerald-950 border-2 border-emerald-400 text-emerald-300 font-mono text-center py-3 px-4 rounded-2xl text-base sm:text-lg font-black tracking-widest shadow-inner shadow-emerald-500/30 transition-all';
+        arm.classList.add('open');
+        car.classList.remove('opacity-60');
+        car.classList.add('translate-x-32', 'opacity-100');
+        stateText.innerText = 'TERBUKA (3.5 DETIK)';
+        stateText.className = 'font-bold text-emerald-400';
+        log.innerText = '[GATE-IN-01] Tap RFID B 1234 ABC — Member Aktif (Ahmad Favian). Palang dibuka otomatis.';
+        addSystemAuditLog(`[GATE-IN-01] Tap RFID B 1234 ABC — Member Aktif (Ahmad Favian). Palang Terbuka.`);
+
+        setTimeout(() => {
+          arm.classList.remove('open');
+          car.classList.remove('translate-x-32', 'opacity-100');
+          car.classList.add('opacity-60');
+          sign.innerText = '[ STANDBY : TEMPEL KARTU MEMBER ]';
+          sign.className = 'w-full bg-black/95 border-2 border-emerald-500/80 text-emerald-400 font-mono text-center py-3 px-4 rounded-2xl text-base sm:text-lg font-black tracking-widest shadow-inner shadow-emerald-500/20 transition-all';
+          stateText.innerText = 'TERTUTUP (LOCKED)';
+          stateText.className = 'font-bold text-rose-400';
+        }, 3500);
+
+      } else {
+        sign.innerText = 'AKSES DITOLAK: MASA AKTIF TELAH HABIS!';
+        sign.className = 'w-full bg-rose-950 border-2 border-rose-500 text-rose-300 font-mono text-center py-3 px-4 rounded-2xl text-base sm:text-lg font-black tracking-widest shadow-inner shadow-rose-500/30 animate-bounce transition-all';
+        stateText.innerText = 'TERKUNCI (AKSES DITOLAK)';
+        stateText.className = 'font-bold text-rose-400';
+        log.innerText = '[GATE-IN-01] Tap RFID B 9999 EXP — Kadaluarsa sejak 01 Agu 2026. Palang tetap terkunci.';
+        addSystemAuditLog(`[GATE-IN-01] [ACCESS DENIED] Tap RFID B 9999 EXP — Akun Kadaluarsa sejak 01 Agu 2026.`);
+
+        setTimeout(() => {
+          sign.innerText = '[ STANDBY : TEMPEL KARTU MEMBER ]';
+          sign.className = 'w-full bg-black/95 border-2 border-emerald-500/80 text-emerald-400 font-mono text-center py-3 px-4 rounded-2xl text-base sm:text-lg font-black tracking-widest shadow-inner shadow-emerald-500/20 transition-all';
+        }, 3200);
+      }
+    }
+
+    // Security PIN Pad Logic for Satpam
+    let enteredPin = '';
+    function openSecurityPinModal() {
+      enteredPin = '';
+      updatePinDots();
+      document.getElementById('pinErrorMsg').classList.add('hidden');
+      document.getElementById('securityPinModal').classList.remove('hidden');
+    }
+
+    function closeSecurityPinModal() {
+      document.getElementById('securityPinModal').classList.add('hidden');
+    }
+
+    function pressPinKey(digit) {
+      if (enteredPin.length < 6) {
+        enteredPin += digit;
+        updatePinDots();
+      }
+    }
+
+    function clearPinKey() {
+      enteredPin = '';
+      updatePinDots();
+      document.getElementById('pinErrorMsg').classList.add('hidden');
+    }
+
+    function updatePinDots() {
+      for (let i = 0; i < 6; i++) {
+        const dot = document.getElementById('dot-' + i);
+        if (i < enteredPin.length) {
+          dot.className = 'w-4 h-4 rounded-full border-2 border-amber-400 bg-amber-400 shadow-md';
+        } else {
+          dot.className = 'w-4 h-4 rounded-full border-2 border-slate-600 bg-slate-800';
+        }
+      }
+    }
+
+    function submitPinKey() {
+      const reason = document.getElementById('pinOverrideReason').value;
+      if (enteredPin === '123456') {
+        closeSecurityPinModal();
+        // Trigger Gate In Override
+        const arm = document.getElementById('kioskBarrierArm');
+        const sign = document.getElementById('kioskLedSign');
+        const log = document.getElementById('kioskRecentLog');
+        const stateText = document.getElementById('kioskGateStateText');
+
+        sign.innerText = 'OVERRIDE PIN SATPAM: PALANG DIBUKA';
+        sign.className = 'w-full bg-amber-950 border-2 border-amber-400 text-amber-300 font-mono text-center py-3 px-4 rounded-2xl text-base sm:text-lg font-black tracking-widest shadow-inner shadow-amber-500/30 transition-all';
+        arm.classList.add('open');
+        stateText.innerText = 'TERBUKA (OVERRIDE SATPAM)';
+        stateText.className = 'font-bold text-amber-400';
+        log.innerText = `[OVERRIDE SATPAM] Palang dibuka manual. Alasan: ${reason}.`;
+
+        addSystemAuditLog(`[OVERRIDE PIN SATPAM] Petugas lapangan memasukkan PIN valid. Alasan: '${reason}'. Palang Gate-In terbuka.`);
+        
+        // Update bypass count in admin
+        const countEl = document.getElementById('dashBypassCount');
+        if (countEl) countEl.innerText = '3 Kali';
+
+        setTimeout(() => {
+          arm.classList.remove('open');
+          sign.innerText = '[ STANDBY : TEMPEL KARTU MEMBER ]';
+          sign.className = 'w-full bg-black/95 border-2 border-emerald-500/80 text-emerald-400 font-mono text-center py-3 px-4 rounded-2xl text-base sm:text-lg font-black tracking-widest shadow-inner shadow-emerald-500/20 transition-all';
+          stateText.innerText = 'TERTUTUP (LOCKED)';
+          stateText.className = 'font-bold text-rose-400';
+        }, 4000);
+
+      } else {
+        document.getElementById('pinErrorMsg').classList.remove('hidden');
+        enteredPin = '';
+        updatePinDots();
+      }
+    }
+
+    // Gate Out Confirmation Logic
+    function confirmReleaseGateOut() {
+      const statusEl = document.getElementById('gateOutArmStatus');
+      const btn = document.getElementById('btnConfirmRelease');
+
+      statusEl.innerText = 'TERBUKA (KENDARAAN KELUAR)';
+      statusEl.className = 'font-mono font-extrabold text-sm text-emerald-600';
+      btn.innerText = '✓ Selesai — Palang Terbuka';
+      btn.className = 'w-full py-4 bg-slate-800 text-slate-400 font-extrabold rounded-xl text-sm cursor-not-allowed';
+      btn.disabled = true;
+
+      addSystemAuditLog('[GATE-OUT-01] Operator Budi mengonfirmasi rilis kendaraan B 1234 ABC. Sesi parkir selesai.');
+
+      setTimeout(() => {
+        statusEl.innerText = 'TERTUTUP (MENUNGGU KONFIRMASI)';
+        statusEl.className = 'font-mono font-extrabold text-sm text-rose-600';
+        btn.innerText = 'Konfirmasi & Buka Palang Keluar';
+        btn.className = 'w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-xl text-sm shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2';
+        btn.disabled = false;
+      }, 3500);
+    }
+
+    function triggerEmergencyGateOut() {
+      alert('Palang Gerbang Keluar dibuka manual dalam mode darurat!');
+      addSystemAuditLog('[GATE-OUT-01] [EMERGENCY TRIGGER] Palang darurat dibuka operator.');
+    }
+
+    // Kasir Subtabs
+    function switchKasirTab(tabKey) {
+      document.querySelectorAll('.kasir-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.kasir-subtab').forEach(el => {
+        el.classList.remove('bg-brand-600', 'text-white', 'shadow-sm');
+        el.classList.add('text-slate-600');
+      });
+
+      if (tabKey === 'tab-registrasi') {
+        document.getElementById('kasir-view-reg').classList.remove('hidden');
+        document.getElementById('btn-tab-reg').classList.add('bg-brand-600', 'text-white', 'shadow-sm');
+        document.getElementById('btn-tab-reg').classList.remove('text-slate-600');
+      } else if (tabKey === 'tab-pembayaran') {
+        document.getElementById('kasir-view-pay').classList.remove('hidden');
+        document.getElementById('btn-tab-pay').classList.add('bg-brand-600', 'text-white', 'shadow-sm');
+        document.getElementById('btn-tab-pay').classList.remove('text-slate-600');
+        recalculatePayTotal();
+      } else if (tabKey === 'tab-data-member') {
+        document.getElementById('kasir-view-dat').classList.remove('hidden');
+        document.getElementById('btn-tab-dat').classList.add('bg-brand-600', 'text-white', 'shadow-sm');
+        document.getElementById('btn-tab-dat').classList.remove('text-slate-600');
+      }
+    }
+
+    function updateRegistrationTariff() {
+      const type = document.getElementById('regVehicleType').value;
+      const display = document.getElementById('regInitialTariffDisplay');
+      if (type === 'Motor') {
+        display.innerText = 'Rp 50.000,-';
+      } else {
+        display.innerText = 'Rp 150.000,-';
+      }
+    }
+
+    function scanRandomRfid() {
+      const random = 'RFID-' + Math.floor(10000 + Math.random() * 90000);
+      document.getElementById('regRfidUid').value = random;
+    }
+
+    function handleFullRegistration(e) {
+      e.preventDefault();
+      const name = document.getElementById('regFullName').value;
+      const phone = document.getElementById('regPhoneFull').value;
+      const plate = document.getElementById('regPlateFull').value.toUpperCase();
+      const type = document.getElementById('regVehicleType').value;
+      const brand = document.getElementById('regBrandFull').value;
+      const address = document.getElementById('regAddress').value;
+
+      alert(`Pendaftaran Member Berhasil Disimpan!\n\nNama: ${name}\nAlamat: ${address}\nPlat: ${plate} (${brand} - ${type})\n\nData disimpan ke entitas MEMBER dan KENDARAAN.`);
+
+      // Prepend to Master Member Table
+      const tbody = document.getElementById('kasirMemberTableBody');
+      const newId = 'MBR-2026-00' + (tbody.children.length + 1);
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-slate-50 transition';
+      tr.innerHTML = `
+        <td class="py-3.5 px-4 font-mono font-bold text-brand-700">${newId}</td>
+        <td class="py-3.5 px-4">
+          <div class="font-bold text-slate-900">${name}</div>
+          <div class="text-[11px] text-slate-400">${phone} • ${address}</div>
+        </td>
+        <td class="py-3.5 px-4">
+          <span class="font-mono font-bold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">${plate}</span>
+          <span class="text-slate-400 text-[11px] ml-1">(${type} - ${brand})</span>
+        </td>
+        <td class="py-3.5 px-4 font-mono text-emerald-600 font-semibold">2026-11-20</td>
+        <td class="py-3.5 px-4">
+          <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full">Aktif</span>
+        </td>
+        <td class="py-3.5 px-4 text-center">
+          <button onclick="triggerQuickPayFor('${newId}')" class="px-2.5 py-1 bg-indigo-50 text-brand-700 hover:bg-indigo-100 rounded font-bold text-[11px]">+ Iuran</button>
+        </td>
+      `;
+      tbody.prepend(tr);
+
+      // Increment dash count
+      const dashCount = document.getElementById('dashTotalMembers');
+      if (dashCount) dashCount.innerText = parseInt(dashCount.innerText) + 1;
+
+      // Add to select options
+      const sel = document.getElementById('paySelectMember');
+      const rate = type === 'Motor' ? 50000 : 150000;
+      const opt = document.createElement('option');
+      opt.value = `${newId}|${name}|${type}|${rate}|${plate}`;
+      opt.innerText = `${name} (${newId}) — ${type} (${plate})`;
+      sel.prepend(opt);
+
+      switchKasirTab('tab-data-member');
+    }
+
+    // Dynamic Payment Logic (Tariff Motor vs Mobil)
+    function syncPayFormMember() {
+      recalculatePayTotal();
+    }
+
+    function recalculatePayTotal() {
+      const raw = document.getElementById('paySelectMember').value.split('|');
+      const type = raw[2];
+      const ratePerMonth = parseInt(raw[3]);
+      const months = parseInt(document.getElementById('payDurationSelect').value);
+
+      let discountPercent = 0;
+      if (months === 3) discountPercent = 0.05;
+      if (months === 6) discountPercent = 0.08;
+      if (months === 12) discountPercent = 0.12;
+
+      const subtotal = ratePerMonth * months;
+      const total = subtotal - (subtotal * discountPercent);
+
+      document.getElementById('payTotalCalculated').innerText = 'Rp ' + total.toLocaleString('id-ID') + ',-';
+      document.getElementById('payVehicleBadge').innerText = `${type} (Rp ${ratePerMonth.toLocaleString('id-ID')}/bln)`;
+      document.getElementById('payExpiryPreview').innerText = `Masa aktif baru: +${months} Bulan (Hemat ${(discountPercent*100)}%)`;
+    }
+
+    function handleExecutePayment(e) {
+      e.preventDefault();
+      const raw = document.getElementById('paySelectMember').value.split('|');
+      const memberId = raw[0];
+      const name = raw[1];
+      const type = raw[2];
+      const plate = raw[4];
+      const months = document.getElementById('payDurationSelect').value;
+      const totalStr = document.getElementById('payTotalCalculated').innerText;
+
+      // Populate Receipt Modal
+      document.getElementById('recTrxId').innerText = 'TRX-' + Math.floor(100000 + Math.random() * 900000);
+      document.getElementById('recMemberName').innerText = name + ' (' + memberId + ')';
+      document.getElementById('recPlateType').innerText = `${plate} (${type})`;
+      document.getElementById('recDuration').innerText = `${months} Bulan`;
+      document.getElementById('recNewExpiry').innerText = '20 Des 2026';
+      document.getElementById('recTotalAmount').innerText = totalStr.replace(',-', '');
+
+      document.getElementById('receiptPrintModal').classList.remove('hidden');
+      addSystemAuditLog(`[PEMBAYARAN IURAN] ${name} (${memberId}) membayar perpanjangan ${months} bulan sebesar ${totalStr}. Kuitansi terbit.`);
+    }
+
+    function closeReceiptModal() {
+      document.getElementById('receiptPrintModal').classList.add('hidden');
+    }
+
+    function triggerQuickPayFor(memberId) {
+      switchKasirTab('tab-pembayaran');
+      const sel = document.getElementById('paySelectMember');
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value.includes(memberId)) {
+          sel.selectedIndex = i;
+          break;
+        }
+      }
+      recalculatePayTotal();
+    }
+
+    function filterMemberDataRows() {
+      const q = document.getElementById('kasirMemberFilterInput').value.toLowerCase();
+      const rows = document.querySelectorAll('#kasirMemberTableBody tr');
+      rows.forEach(r => {
+        r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none';
+      });
+    }
+
+    // System Audit Log Stream Helper
+    function addSystemAuditLog(msg) {
+      const feed = document.getElementById('systemAuditFeed');
+      if (!feed) return;
+      const div = document.createElement('div');
+      const time = new Date().toLocaleTimeString('id-ID');
+      div.className = msg.includes('DENIED') ? 'text-rose-400' : (msg.includes('OVERRIDE') ? 'text-amber-400' : 'text-emerald-400');
+      div.innerText = `[${time}] ${msg}`;
+      feed.prepend(div);
+    }
+
+    function clearSystemAuditLogs() {
+      const feed = document.getElementById('systemAuditFeed');
+      if (feed) feed.innerHTML = '<div class="text-slate-500">Log audit dibersihkan oleh admin.</div>';
+    }
+  </script>
+</body>
+</html>
