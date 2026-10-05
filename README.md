@@ -118,9 +118,11 @@ cd mkkfadillah
 
 ---
 
-## 🎯 Ringkasan 5 Layar Utama Aplikasi
+## 🎯 Ringkasan Layar Utama Aplikasi
 1. **Screen 01: Portal Login & Dual Gateway** (`/`) - Autentikasi petugas dengan kredensial atau PIN cepat.
 2. **Screen 02: Kios Mandiri Gerbang Masuk** (`/kios-gatein`) - Tap kartu RFID member mandiri dan bypass PIN petugas satpam jaga.
 3. **Screen 03: Pos Operator Gerbang Keluar** (`/pos-gateout`) - Verifikasi kamera LPR, pencocokan plat kendaraan, dan pembukaan palang otomatis (biaya Rp 0,- untuk member).
 4. **Screen 04: Loket Kasir & Administrasi** (`/kasir`) - Pendaftaran member baru, registrasi plat & RFID, perpanjangan masa aktif bulanan (1, 3, 6, 12 bulan), serta cetak kuitansi.
 5. **Screen 05: Dashboard Admin & Laporan** (`/dashboard`) - Grafik pendapatan iuran bulanan, statistik kunjungan, rasio armada, dan feed aktivitas gerbang real-time.
+6. **Screen 06: Pengaturan Member** (`/member`) - Master data keanggotaan dan penerbitan kartu digital QR.
+7. **Screen 07: Kelola Akun (Admin, Kasir, Petugas)** (`/kelola-akun`) - Manajemen akun login, peran (Admin, Kasir, Petugas Gerbang, Petugas Keamanan), PIN otorisasi bypass gerbang, dan lokasi pos penugasan.

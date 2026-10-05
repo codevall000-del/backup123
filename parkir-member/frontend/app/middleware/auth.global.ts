@@ -1,7 +1,7 @@
 export default defineNuxtRouteMiddleware((to, from) => {
   // Routes accessible without login:
   // 1. '/' (Portal Login Petugas & Administrator)
-  // 2. '/kios-gatein' (Kios Gerbang Masuk Pengendara / Tamu)
+  // 2. '/kios-gatein' (Kios Mandiri Jalur Masuk Khusus Member)
   const isPublicRoute = to.path === '/' || to.path === '/kios-gatein'
 
   if (isPublicRoute) {
@@ -21,8 +21,8 @@ export default defineNuxtRouteMiddleware((to, from) => {
     })
   }
 
-  // Strict RBAC: Halaman Pengaturan Member (/member) HANYA BISA DIAKSES OLEH ADMIN
-  if (to.path.startsWith('/member')) {
+  // Strict RBAC: Halaman Pengaturan Member (/member) & Kelola Akun (/kelola-akun) HANYA BISA DIAKSES OLEH ADMIN
+  if (to.path.startsWith('/member') || to.path.startsWith('/kelola-akun')) {
     const role = (currentUser.value.peran || '').toLowerCase()
     const username = (currentUser.value.username || currentUser.value.id_petugas || '').toLowerCase()
     const isAdmin = role === 'admin' || username.includes('adm')

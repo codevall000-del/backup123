@@ -7,6 +7,7 @@ use App\Http\Controllers\MemberController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\GateController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\PetugasController;
 
 /*
 |--------------------------------------------------------------------------
@@ -30,6 +31,16 @@ Route::prefix('auth')->group(function () {
     Route::get('/petugas', [AuthController::class, 'getPetugasList']);
 });
 
+// Kelola Akun (Admin, Kasir, Petugas/Operator/Satpam)
+Route::prefix('petugas')->group(function () {
+    Route::get('/', [PetugasController::class, 'index']);
+    Route::post('/', [PetugasController::class, 'store']);
+    Route::get('/{id}', [PetugasController::class, 'show']);
+    Route::put('/{id}', [PetugasController::class, 'update']);
+    Route::delete('/{id}', [PetugasController::class, 'destroy']);
+    Route::post('/{id}/reset-password', [PetugasController::class, 'resetPassword']);
+});
+
 // HIPO 1.0: Kelola Data Member
 Route::prefix('members')->group(function () {
     Route::get('/', [MemberController::class, 'index']);
@@ -49,14 +60,14 @@ Route::prefix('pembayaran')->group(function () {
     Route::get('/receipt/{id}', [PembayaranController::class, 'receipt']);
 });
 
-// HIPO 3.0 & 4.0: Gate-In & Gate-Out Operations
+// HIPO 3.0 & 4.0: Gate-In & Gate-Out Operations (Khusus Member)
 Route::prefix('gate')->group(function () {
     Route::post('/check-in', [GateController::class, 'checkIn']);
-    Route::post('/tiket-masuk', [GateController::class, 'tiketMasuk']);
     Route::post('/override-in', [GateController::class, 'overrideIn']);
     Route::post('/scan-out', [GateController::class, 'scanOut']);
     Route::post('/check-out', [GateController::class, 'checkOut']);
     Route::post('/emergency-open', [GateController::class, 'emergencyOpen']);
+    Route::post('/verify-kiosk-access', [GateController::class, 'verifyKioskAccess']);
     Route::get('/active-sessions', [GateController::class, 'activeSessions']);
 });
 

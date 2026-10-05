@@ -9,6 +9,12 @@ export const useApi = () => {
     watch: true
   })
 
+  // Kiosk Gate-In Access Lock state
+  const isKioskUnlocked = useCookie<boolean>('sip_kiosk_unlocked', {
+    default: () => false,
+    watch: true
+  })
+
   const isLoggedIn = computed(() => Boolean(currentUser.value && currentUser.value.id_petugas))
 
   const logout = () => {
@@ -90,7 +96,7 @@ export const useApi = () => {
       })
     } catch {
       // Fallback
-      if (pin === '123456' || pin === '998877') {
+      if (pin === '123456' || pin === '998877' || pin === '1234') {
         return {
           success: true,
           data: {
@@ -101,6 +107,183 @@ export const useApi = () => {
         }
       }
       return { success: false, message: 'PIN tidak valid' }
+    }
+  }
+
+  // Kelola Akun (Admin, Kasir, Petugas/Operator/Satpam)
+  const defaultPetugasMock = [
+    {
+      id_petugas: 'ADM-01',
+      nama_petugas: 'Administrator',
+      username: 'admin',
+      peran: 'admin',
+      pin_petugas: '123456',
+      pos_aktif: 'Pusat Administrasi & Pengawas',
+      created_at: '2026-10-04T00:00:00Z'
+    },
+    {
+      id_petugas: 'PETUGAS-01',
+      nama_petugas: 'Petugas Operasional',
+      username: 'petugas',
+      peran: 'operator',
+      pin_petugas: '123456',
+      pos_aktif: 'Pos Gerbang Keluar',
+      created_at: '2026-10-04T00:00:00Z'
+    },
+    {
+      id_petugas: 'KSR-01',
+      nama_petugas: 'Petugas Kasir',
+      username: 'kasir',
+      peran: 'kasir',
+      pin_petugas: '123456',
+      pos_aktif: 'Loket Kasir',
+      created_at: '2026-10-04T00:00:00Z'
+    },
+    {
+      id_petugas: 'OPR-01',
+      nama_petugas: 'Petugas Gerbang',
+      username: 'operator',
+      peran: 'operator',
+      pin_petugas: '123456',
+      pos_aktif: 'Pos Gerbang Keluar',
+      created_at: '2026-10-04T00:00:00Z'
+    },
+    {
+      id_petugas: 'SEC-01',
+      nama_petugas: 'Petugas Keamanan',
+      username: 'satpam',
+      peran: 'satpam',
+      pin_petugas: '998877',
+      pos_aktif: 'Pos Gerbang Masuk',
+      created_at: '2026-10-04T00:00:00Z'
+    }
+  ]
+
+  const localPetugasList = useState<any[]>('sip_local_petugas', () => defaultPetugasMock)
+
+  const getPetugasList = async (search = '', role = 'semua') => {
+    try {
+      const res: any = await fetchWithFallback(`/petugas?search=${encodeURIComponent(search)}&role=${encodeURIComponent(role)}`)
+      return res
+    } catch {
+      let filtered = [...localPetugasList.value]
+      if (search.trim()) {
+        const s = search.toLowerCase()
+        filtered = filtered.filter(p => 
+          (p.nama_petugas || '').toLowerCase().includes(s) ||
+          (p.username || '').toLowerCase().includes(s) ||
+          (p.id_petugas || '').toLowerCase().includes(s) ||
+          (p.pos_aktif || '').toLowerCase().includes(s)
+        )
+      }
+      if (role && role !== 'semua' && role !== 'all') {
+        if (role === 'petugas') {
+          filtered = filtered.filter(p => ['operator', 'petugas', 'satpam'].includes(p.peran))
+        } else {
+          filtered = filtered.filter(p => p.peran === role)
+        }
+      }
+      const countAll = localPetugasList.value.length
+      const countAdmin = localPetugasList.value.filter(p => p.peran === 'admin').length
+      const countKasir = localPetugasList.value.filter(p => p.peran === 'kasir').length
+      const countPetugas = localPetugasList.value.filter(p => ['operator', 'petugas', 'satpam'].includes(p.peran)).length
+
+      return {
+        success: true,
+        data: filtered,
+        meta: {
+          total_semua: countAll,
+          total_admin: countAdmin,
+          total_kasir: countKasir,
+          total_petugas: countPetugas
+        }
+      }
+    }
+  }
+
+  const createPetugas = async (payload: any) => {
+    try {
+      return await fetchWithFallback('/petugas', {
+        method: 'POST',
+        body: payload
+      })
+    } catch (err: any) {
+      if (isBackendOnline.value) throw err
+      // Offline fallback
+      const prefix = payload.peran === 'admin' ? 'ADM' : (payload.peran === 'kasir' ? 'KSR' : (payload.peran === 'satpam' ? 'SEC' : 'PTG'))
+      const newId = payload.id_petugas || `${prefix}-${String(localPetugasList.value.length + 1).padStart(2, '0')}`
+      const newAcc = {
+        id_petugas: newId.toUpperCase(),
+        nama_petugas: payload.nama_petugas,
+        username: payload.username.toLowerCase(),
+        peran: payload.peran,
+        pin_petugas: payload.pin_petugas || '123456',
+        pos_aktif: payload.pos_aktif || (payload.peran === 'admin' ? 'Pusat Administrasi' : (payload.peran === 'kasir' ? 'Loket Kasir' : 'Pos Gerbang Keluar')),
+        created_at: new Date().toISOString()
+      }
+      localPetugasList.value = [newAcc, ...localPetugasList.value]
+      return {
+        success: true,
+        message: `Akun ${payload.peran} (${newId}) berhasil ditambahkan (Mode Demo).`,
+        data: newAcc
+      }
+    }
+  }
+
+  const updatePetugas = async (id: string, payload: any) => {
+    try {
+      return await fetchWithFallback(`/petugas/${id}`, {
+        method: 'PUT',
+        body: payload
+      })
+    } catch (err: any) {
+      if (isBackendOnline.value) throw err
+      const idx = localPetugasList.value.findIndex(p => p.id_petugas === id)
+      if (idx !== -1) {
+        localPetugasList.value[idx] = {
+          ...localPetugasList.value[idx],
+          ...payload,
+          id_petugas: id
+        }
+      }
+      return {
+        success: true,
+        message: `Data akun ${id} berhasil diperbarui (Mode Demo).`,
+        data: localPetugasList.value[idx]
+      }
+    }
+  }
+
+  const deletePetugas = async (id: string) => {
+    try {
+      return await fetchWithFallback(`/petugas/${id}`, {
+        method: 'DELETE'
+      })
+    } catch (err: any) {
+      if (isBackendOnline.value) throw err
+      if (id === 'ADM-01') {
+        throw new Error('Akun Administrator Utama (ADM-01) tidak dapat dihapus.')
+      }
+      localPetugasList.value = localPetugasList.value.filter(p => p.id_petugas !== id)
+      return {
+        success: true,
+        message: `Akun ${id} berhasil dihapus (Mode Demo).`
+      }
+    }
+  }
+
+  const resetPetugasPassword = async (id: string, password: string) => {
+    try {
+      return await fetchWithFallback(`/petugas/${id}/reset-password`, {
+        method: 'POST',
+        body: { password }
+      })
+    } catch (err: any) {
+      if (isBackendOnline.value) throw err
+      return {
+        success: true,
+        message: `Kata sandi akun ${id} berhasil direset (Mode Demo).`
+      }
     }
   }
 
@@ -171,13 +354,6 @@ export const useApi = () => {
     })
   }
 
-  const gateTiketMasuk = async (jenisKendaraan = 'mobil', gerbang = 'GATE-IN 01', lprPlate = '') => {
-    return await fetchWithFallback('/gate/tiket-masuk', {
-      method: 'POST',
-      body: { jenis_kendaraan: jenisKendaraan, gerbang_masuk: gerbang, lpr_plate: lprPlate }
-    })
-  }
-
   const gateOverrideIn = async (pin: string, alasan: string, noPlat = '', gerbang = 'GATE-IN 01') => {
     return await fetchWithFallback('/gate/override-in', {
       method: 'POST',
@@ -199,10 +375,34 @@ export const useApi = () => {
     })
   }
 
-  const gateEmergencyOpen = async () => {
-    return await fetchWithFallback('/gate/emergency-open', {
-      method: 'POST'
-    })
+  const gateEmergencyOpen = async (password: string = '1234', alasan: string = 'Darurat Operasional', gerbang: string = 'GATE-OUT 01') => {
+    try {
+      return await fetchWithFallback('/gate/emergency-open', {
+        method: 'POST',
+        body: { password, alasan, gerbang_keluar: gerbang }
+      })
+    } catch (err: any) {
+      // Demo fallback jika backend offline
+      if (password === '1234' && alasan?.trim()) {
+        return {
+          success: true,
+          palang: 'terbuka_darurat',
+          message: 'Palang darurat berhasil diaktifkan secara manual (Mode Simulasi).',
+          alasan: alasan.trim(),
+          timestamp: new Date().toLocaleTimeString('id-ID') + ' WIB'
+        }
+      }
+      if (password !== '1234') {
+        return {
+          success: false,
+          message: 'Password darurat salah! Masukkan password 1234.'
+        }
+      }
+      return {
+        success: false,
+        message: 'Alasan pembukaan darurat wajib diisi.'
+      }
+    }
   }
 
   // Dashboard & Reports
@@ -254,14 +454,52 @@ export const useApi = () => {
     }
   }
 
+  const verifyKioskAccess = async (password: string) => {
+    const cleanPass = (password || '').trim()
+    try {
+      const res: any = await fetchWithFallback('/gate/verify-kiosk-access', {
+        method: 'POST',
+        body: { password: cleanPass }
+      })
+      if (res?.success) {
+        isKioskUnlocked.value = true
+      }
+      return res
+    } catch (err: any) {
+      if (['1234', '123456', 'admin123', '998877'].includes(cleanPass)) {
+        isKioskUnlocked.value = true
+        return {
+          success: true,
+          message: 'Otorisasi Kios Gate-In berhasil.'
+        }
+      }
+      return {
+        success: false,
+        message: err?.data?.message || 'Kata sandi kios salah! Masukkan password 1234.'
+      }
+    }
+  }
+
+  const lockKiosk = () => {
+    isKioskUnlocked.value = false
+  }
+
   return {
     apiBase,
     isBackendOnline,
     currentUser,
     isLoggedIn,
+    isKioskUnlocked,
+    verifyKioskAccess,
+    lockKiosk,
     logout,
     login,
     verifyPin,
+    getPetugasList,
+    createPetugas,
+    updatePetugas,
+    deletePetugas,
+    resetPetugasPassword,
     getMembers,
     createMember,
     updateMember,
@@ -272,7 +510,6 @@ export const useApi = () => {
     processPayment,
     getPaymentReceipt,
     gateCheckIn,
-    gateTiketMasuk,
     gateOverrideIn,
     gateScanOut,
     gateCheckOut,

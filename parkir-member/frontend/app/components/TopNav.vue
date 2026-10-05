@@ -16,138 +16,8 @@
           </div>
         </NuxtLink>
 
-        <!-- Screen Switcher Tabs (Apple Segmented Control Style) -->
-        <nav class="flex items-center gap-1 sm:gap-1.5 bg-black/[0.04] p-1 rounded-2xl border border-black/[0.04] text-xs font-semibold overflow-x-auto">
-          <!-- 01. Login Portal (Always accessible) -->
-          <NuxtLink
-            to="/"
-            class="apple-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap"
-            :class="route.path === '/' ? 'text-white bg-[#0071e3] shadow-sm' : 'text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-white/60'"
-          >
-            <span class="material-symbols-outlined text-[16px]">login</span>
-            <span>01. Login Portal</span>
-          </NuxtLink>
-
-          <!-- 02. Kios Gate-In -->
-          <NuxtLink
-            to="/kios-gatein"
-            class="apple-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap relative"
-            :class="route.path === '/kios-gatein' ? 'text-white bg-[#10b981] shadow-sm' : 'text-[#6e6e73] hover:text-[#065f46] hover:bg-white/60'"
-          >
-            <span class="material-symbols-outlined text-[16px]">meeting_room</span>
-            <span>02. Kios Gate-In</span>
-          </NuxtLink>
-
-          <!-- 03. Pos Gate-Out (Locked before login) -->
-          <template v-if="isLoggedIn">
-            <NuxtLink
-              to="/pos-gateout"
-              class="apple-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap"
-              :class="route.path === '/pos-gateout' ? 'text-white bg-[#0071e3] shadow-sm' : 'text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-white/60'"
-            >
-              <span class="material-symbols-outlined text-[16px]">sensors</span>
-              <span>03. Pos Gate-Out</span>
-            </NuxtLink>
-          </template>
-          <template v-else>
-            <button
-              type="button"
-              @click="notifyNeedLogin('Pos Gerbang Keluar')"
-              class="apple-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap text-[#a1a1a6] hover:text-[#6e6e73] hover:bg-black/[0.02] cursor-pointer"
-              title="Akses dikunci: Silakan login petugas terlebih dahulu"
-            >
-              <span class="material-symbols-outlined text-[16px] text-amber-500">lock</span>
-              <span>03. Pos Gate-Out</span>
-            </button>
-          </template>
-
-          <!-- 04. Pengaturan Member (KHUSUS HAK AKSES ADMIN) -->
-          <template v-if="isLoggedIn && isAdminUser">
-            <NuxtLink
-              to="/member"
-              class="apple-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap"
-              :class="route.path.startsWith('/member') ? 'text-white bg-[#0071e3] shadow-sm' : 'text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-white/60'"
-            >
-              <span class="material-symbols-outlined text-[16px]">manage_accounts</span>
-              <span>04. Pengaturan Member</span>
-              <span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-700 font-mono-metric">ADMIN</span>
-            </NuxtLink>
-          </template>
-          <template v-else-if="isLoggedIn">
-            <!-- Non-admin user logged in (Kasir / Petugas) -->
-            <button
-              type="button"
-              @click="notifyAdminOnly"
-              class="apple-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap text-[#a1a1a6] hover:text-amber-800 hover:bg-amber-50/50 cursor-pointer"
-              title="Akses Terkunci: Halaman Pengaturan Member hanya berhak diakses oleh Administrator"
-            >
-              <span class="material-symbols-outlined text-[16px] text-amber-500">lock</span>
-              <span>04. Pengaturan Member</span>
-              <span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-800 font-mono-metric">ADMIN ONLY</span>
-            </button>
-          </template>
-          <template v-else>
-            <!-- Guest -->
-            <button
-              type="button"
-              @click="notifyNeedLogin('Pengaturan Member (Khusus Administrator)')"
-              class="apple-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap text-[#a1a1a6] hover:text-[#6e6e73] hover:bg-black/[0.02] cursor-pointer"
-              title="Akses dikunci: Silakan login sebagai Administrator terlebih dahulu"
-            >
-              <span class="material-symbols-outlined text-[16px] text-amber-500">lock</span>
-              <span>04. Pengaturan Member</span>
-            </button>
-          </template>
-
-          <!-- 05. Loket Kasir (Locked before login) -->
-          <template v-if="isLoggedIn">
-            <NuxtLink
-              to="/kasir"
-              class="apple-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap"
-              :class="route.path.startsWith('/kasir') ? 'text-white bg-[#0071e3] shadow-sm' : 'text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-white/60'"
-            >
-              <span class="material-symbols-outlined text-[16px]">point_of_sale</span>
-              <span>05. Loket Kasir</span>
-            </NuxtLink>
-          </template>
-          <template v-else>
-            <button
-              type="button"
-              @click="notifyNeedLogin('Loket Kasir & Iuran')"
-              class="apple-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap text-[#a1a1a6] hover:text-[#6e6e73] hover:bg-black/[0.02] cursor-pointer"
-              title="Akses dikunci: Silakan login petugas terlebih dahulu"
-            >
-              <span class="material-symbols-outlined text-[16px] text-amber-500">lock</span>
-              <span>05. Loket Kasir</span>
-            </button>
-          </template>
-
-          <!-- 06. Dashboard (Locked before login) -->
-          <template v-if="isLoggedIn">
-            <NuxtLink
-              to="/dashboard"
-              class="apple-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap"
-              :class="route.path === '/dashboard' ? 'text-white bg-[#0071e3] shadow-sm' : 'text-[#6e6e73] hover:text-[#1d1d1f] hover:bg-white/60'"
-            >
-              <span class="material-symbols-outlined text-[16px]">monitoring</span>
-              <span>06. Dashboard</span>
-            </NuxtLink>
-          </template>
-          <template v-else>
-            <button
-              type="button"
-              @click="notifyNeedLogin('Dashboard Monitoring')"
-              class="apple-btn px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 whitespace-nowrap text-[#a1a1a6] hover:text-[#6e6e73] hover:bg-black/[0.02] cursor-pointer"
-              title="Akses dikunci: Silakan login petugas terlebih dahulu"
-            >
-              <span class="material-symbols-outlined text-[16px] text-amber-500">lock</span>
-              <span>06. Dashboard</span>
-            </button>
-          </template>
-        </nav>
-
         <!-- Right Side: API Status & User Profile -->
-        <div class="hidden xl:flex items-center gap-3">
+        <div class="flex items-center gap-2 sm:gap-3">
           <div class="flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/[0.04] border border-black/[0.04] text-[11px] font-mono-metric">
             <span class="w-2 h-2 rounded-full" :class="isBackendOnline ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"></span>
             <span class="text-[#6e6e73]">API: Laravel 11</span>
@@ -162,6 +32,17 @@
               <span class="text-xs font-semibold text-[#1d1d1f] leading-tight max-w-[130px] truncate">{{ currentUser.nama_petugas || 'Petugas' }}</span>
               <span class="text-[10px] text-[#0071e3] font-bold uppercase font-mono-metric">{{ currentUser.peran || 'OPERATOR' }}</span>
             </div>
+
+            <!-- Admin Quick Link to Kelola Akun -->
+            <NuxtLink
+              v-if="(currentUser.peran || '').toLowerCase() === 'admin'"
+              to="/kelola-akun"
+              class="apple-btn px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 text-xs font-semibold flex items-center gap-1 shadow-2xs"
+              title="Kelola Akun Kasir, Admin, dan Petugas"
+            >
+              <span class="material-symbols-outlined text-[15px]">manage_accounts</span>
+              <span class="hidden md:inline">Kelola Akun</span>
+            </NuxtLink>
 
             <!-- Logout Button -->
             <button
@@ -179,7 +60,7 @@
           <div v-else class="flex items-center gap-2 pl-2 border-l border-black/[0.08]">
             <div class="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-[11px] font-semibold">
               <span class="material-symbols-outlined text-[14px]">lock</span>
-              <span>Mode Tamu</span>
+              <span>Belum Login</span>
             </div>
             <NuxtLink
               to="/"
@@ -238,27 +119,12 @@ const { currentUser, isLoggedIn, isBackendOnline, logout } = useApi()
 const lockedAlertMessage = ref('')
 let alertTimer: any = null
 
-const isAdminUser = computed(() => {
-  if (!currentUser.value) return false
-  const role = (currentUser.value.peran || '').toLowerCase()
-  const u = (currentUser.value.username || currentUser.value.id_petugas || '').toLowerCase()
-  return role === 'admin' || u.includes('adm')
-})
-
 const notifyNeedLogin = (menuName: string) => {
   lockedAlertMessage.value = `Akses Menu Dibatasi: Silakan login sebagai petugas/admin terlebih dahulu untuk membuka ${menuName}.`
   if (alertTimer) clearTimeout(alertTimer)
   alertTimer = setTimeout(() => {
     lockedAlertMessage.value = ''
   }, 4500)
-}
-
-const notifyAdminOnly = () => {
-  lockedAlertMessage.value = `Akses Dibatasi: Pengaturan & Kelola Member hanya dapat diakses melalui akun Administrator Sistem (ADM-01). Sesi Anda saat ini tidak memiliki kewenangan ini.`
-  if (alertTimer) clearTimeout(alertTimer)
-  alertTimer = setTimeout(() => {
-    lockedAlertMessage.value = ''
-  }, 5000)
 }
 
 const handleLogout = () => {

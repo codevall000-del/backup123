@@ -28,7 +28,7 @@
         </div>
         <button
           type="button"
-          @click="triggerEmergencyBarrier"
+          @click="openEmergencyModal"
           class="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white active:scale-95 transition-all px-3 py-1.5 rounded-xl text-xs font-bold shadow-md shadow-rose-600/20"
         >
           <span class="material-symbols-outlined text-[16px]">e911_emergency</span>
@@ -327,6 +327,136 @@
 
       </div>
     </main>
+
+    <!-- MODAL OTORISASI PALANG DARURAT -->
+    <div
+      v-if="showEmergencyModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200"
+      @click.self="closeEmergencyModal"
+    >
+      <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-rose-100 overflow-hidden transform transition-all scale-100">
+        <!-- Header Modal -->
+        <div class="px-6 py-5 bg-gradient-to-r from-rose-50 to-rose-100/60 border-b border-rose-100 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-md shadow-rose-600/30">
+              <span class="material-symbols-outlined text-2xl">e911_emergency</span>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-base text-slate-900 leading-tight">Otorisasi Palang Darurat</h3>
+              <p class="text-[11px] text-slate-500 font-medium">Buka manual palang gerbang keluar</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            @click="closeEmergencyModal"
+            class="w-8 h-8 rounded-full bg-white/80 hover:bg-white text-slate-400 hover:text-slate-700 flex items-center justify-center border border-slate-200 transition-colors"
+          >
+            <span class="material-symbols-outlined text-lg">close</span>
+          </button>
+        </div>
+
+        <!-- Body Form -->
+        <form @submit.prevent="submitEmergencyOpen" class="p-6 space-y-4">
+          <!-- Warning Alert -->
+          <div class="p-3 rounded-2xl bg-rose-50 border border-rose-200/80 flex items-start gap-2.5 text-xs text-rose-800">
+            <span class="material-symbols-outlined text-[18px] text-rose-600 shrink-0 mt-0.5">warning</span>
+            <span>Tindakan darurat memerlukan otorisasi password keamanan dan wajib memberikan alasan untuk log audit.</span>
+          </div>
+
+          <!-- Password Input -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-slate-700">
+                Password Darurat <span class="text-rose-600">*</span>
+              </label>
+              <span class="text-[10px] font-mono-metric text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                Password: <strong class="text-rose-600 font-bold">1234</strong>
+              </span>
+            </div>
+            <div class="relative">
+              <input
+                ref="passwordInputRef"
+                :type="showPasswordText ? 'text' : 'password'"
+                v-model="emergencyPassword"
+                maxlength="10"
+                placeholder="Masukkan password 1234"
+                class="w-full h-11 px-3.5 pr-10 rounded-xl bg-slate-50 border border-slate-300 focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 text-sm font-mono-metric text-slate-900 placeholder-slate-400 outline-none transition-all"
+                :class="emergencyError && emergencyPassword !== '1234' ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : ''"
+              />
+              <button
+                type="button"
+                @click="showPasswordText = !showPasswordText"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                tabindex="-1"
+              >
+                <span class="material-symbols-outlined text-[18px]">{{ showPasswordText ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Pilihan Kategori Alasan -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1.5">
+              Pilihan Alasan Cepat
+            </label>
+            <select
+              v-model="emergencyReasonPreset"
+              @change="onReasonPresetChange"
+              class="w-full h-11 px-3 rounded-xl bg-slate-50 border border-slate-300 focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 text-xs text-slate-800 outline-none transition-all cursor-pointer"
+            >
+              <option value="Kendaraan Darurat (Ambulans / Damkar / Polisi)">Kendaraan Darurat (Ambulans / Damkar / Polisi)</option>
+              <option value="Sistem / Mesin Palang Mengalami Error atau Macet">Sistem / Mesin Palang Mengalami Error atau Macet</option>
+              <option value="Insiden Keadaan Darurat / Bencana / Evakuasi Cepat">Insiden Keadaan Darurat / Bencana / Evakuasi Cepat</option>
+              <option value="Instruksi Khusus Supervisor / Petugas Pengawas">Instruksi Khusus Supervisor / Petugas Pengawas</option>
+              <option value="Ketik Manual Lainnya">Ketik Manual Alasan Lainnya...</option>
+            </select>
+          </div>
+
+          <!-- Input Textarea Alasan (Wajib diisi) -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <label class="block text-xs font-bold text-slate-700">
+                Alasan Pembukaan Darurat <span class="text-rose-600">*</span>
+              </label>
+              <span class="text-[10px] text-rose-500 font-semibold">Wajib Diisi</span>
+            </div>
+            <textarea
+              v-model="emergencyReasonDetail"
+              rows="3"
+              placeholder="Jelaskan alasan darurat pembukaan palang..."
+              class="w-full p-3 rounded-xl bg-slate-50 border border-slate-300 focus:bg-white focus:border-rose-500 focus:ring-2 focus:ring-rose-500/20 text-xs text-slate-800 placeholder-slate-400 outline-none resize-none transition-all"
+              :class="emergencyError && !emergencyReasonDetail.trim() ? 'border-rose-500 bg-rose-50/40 ring-1 ring-rose-500' : ''"
+            ></textarea>
+          </div>
+
+          <!-- Error Alert Banner -->
+          <div v-if="emergencyError" class="p-3 rounded-xl bg-rose-100 border border-rose-300 text-rose-800 text-xs flex items-center gap-2 animate-in fade-in">
+            <span class="material-symbols-outlined text-[18px] text-rose-600 shrink-0">error</span>
+            <span>{{ emergencyError }}</span>
+          </div>
+
+          <!-- Footer Buttons -->
+          <div class="pt-2 flex items-center justify-end gap-2.5">
+            <button
+              type="button"
+              @click="closeEmergencyModal"
+              class="px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              :disabled="isEmergencySubmitting"
+              class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 active:scale-95 text-white text-xs font-bold shadow-md shadow-rose-600/30 flex items-center gap-1.5 transition-all disabled:opacity-50"
+            >
+              <span v-if="isEmergencySubmitting" class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+              <span v-else class="material-symbols-outlined text-[16px]">e911_emergency</span>
+              <span>{{ isEmergencySubmitting ? 'Membuka...' : 'Buka Palang Darurat' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -354,6 +484,12 @@ const updateClock = () => {
 }
 
 const handleKeydown = (e: KeyboardEvent) => {
+  if (showEmergencyModal.value) {
+    if (e.key === 'Escape') {
+      closeEmergencyModal()
+    }
+    return
+  }
   if (e.key === 'Enter' || e.code === 'Space') {
     if (!isSubmitting.value && !isExitBarrierOpen.value) {
       confirmCheckOut()
@@ -463,10 +599,92 @@ const confirmCheckOut = async () => {
   }
 }
 
-const triggerEmergencyBarrier = async () => {
-  await gateEmergencyOpen()
-  isExitBarrierOpen.value = true
-  successNotification.value = '⚠️ Palang darurat dibuka manual oleh operator!'
+// State & Handler Otorisasi Palang Darurat
+const showEmergencyModal = ref(false)
+const emergencyPassword = ref('')
+const emergencyReasonPreset = ref('Kendaraan Darurat (Ambulans / Damkar / Polisi)')
+const emergencyReasonDetail = ref('Kendaraan Darurat (Ambulans / Damkar / Polisi)')
+const showPasswordText = ref(false)
+const emergencyError = ref('')
+const isEmergencySubmitting = ref(false)
+const passwordInputRef = ref<HTMLInputElement | null>(null)
+
+const openEmergencyModal = () => {
+  emergencyPassword.value = ''
+  emergencyReasonPreset.value = 'Kendaraan Darurat (Ambulans / Damkar / Polisi)'
+  emergencyReasonDetail.value = 'Kendaraan Darurat (Ambulans / Damkar / Polisi)'
+  emergencyError.value = ''
+  showPasswordText.value = false
+  showEmergencyModal.value = true
+  nextTick(() => {
+    passwordInputRef.value?.focus()
+  })
+}
+
+const closeEmergencyModal = () => {
+  showEmergencyModal.value = false
+  emergencyPassword.value = ''
+  emergencyError.value = ''
+}
+
+const onReasonPresetChange = () => {
+  if (emergencyReasonPreset.value === 'Ketik Manual Lainnya') {
+    emergencyReasonDetail.value = ''
+  } else {
+    emergencyReasonDetail.value = emergencyReasonPreset.value
+  }
+}
+
+const submitEmergencyOpen = async () => {
+  emergencyError.value = ''
+
+  if (!emergencyPassword.value) {
+    emergencyError.value = 'Password darurat wajib diisi (Password: 1234).'
+    return
+  }
+
+  if (emergencyPassword.value !== '1234') {
+    emergencyError.value = 'Password salah! Masukkan password darurat yang benar (1234).'
+    return
+  }
+
+  const finalReason = emergencyReasonDetail.value.trim()
+  if (!finalReason) {
+    emergencyError.value = 'Harap berikan alasan pembukaan palang darurat.'
+    return
+  }
+
+  isEmergencySubmitting.value = true
+  try {
+    const res: any = await gateEmergencyOpen(emergencyPassword.value, finalReason, 'GATE-OUT 01')
+    if (res?.success) {
+      isExitBarrierOpen.value = true
+      successNotification.value = `⚠️ Palang darurat dibuka manual oleh operator! Alasan: ${finalReason}`
+      closeEmergencyModal()
+      setTimeout(() => {
+        isExitBarrierOpen.value = false
+      }, 7000)
+    } else {
+      emergencyError.value = res?.message || 'Password salah atau gagal membuka palang darurat.'
+    }
+  } catch (err: any) {
+    if (err?.data?.message) {
+      emergencyError.value = err.data.message
+    } else {
+      isExitBarrierOpen.value = true
+      successNotification.value = `⚠️ Palang darurat dibuka manual oleh operator! Alasan: ${finalReason}`
+      closeEmergencyModal()
+      setTimeout(() => {
+        isExitBarrierOpen.value = false
+      }, 7000)
+    }
+  } finally {
+    isEmergencySubmitting.value = false
+  }
+}
+
+const triggerEmergencyBarrier = () => {
+  openEmergencyModal()
 }
 
 const holdVehicle = () => {

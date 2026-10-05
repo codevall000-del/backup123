@@ -67,9 +67,9 @@
               <div class="mb-5 p-3.5 rounded-2xl bg-indigo-50/70 border border-indigo-200/70 text-xs text-indigo-950 flex items-start gap-2.5 shadow-2xs">
                 <span class="material-symbols-outlined text-brand-600 text-[20px] shrink-0 mt-0.5">verified_user</span>
                 <div class="space-y-0.5">
-                  <strong class="block font-bold text-slate-900">Hak Akses & Pengaturan Member Terpusat (Khusus Admin)</strong>
+                  <strong class="block font-bold text-slate-900">Hak Akses & Kelola Akun Terpusat (Khusus Admin)</strong>
                   <p class="text-[11px] text-slate-600 leading-relaxed">
-                    Pengaturan master data anggota member, penetapan tarif paket, dan penerbitan kartu QR diaudit secara ketat dan <strong>hanya dapat dikelola melalui sesi Administrator</strong>.
+                    Pengaturan master data member, penerbitan kartu QR, serta <strong>Kelola Akun Kasir, Petugas Pos, dan Administrator</strong> diaudit secara ketat dan hanya dapat dikelola melalui sesi Administrator.
                   </p>
                 </div>
               </div>
@@ -268,7 +268,7 @@
               <!-- Title & Desc -->
               <h2 class="apple-title text-2xl font-bold text-[#1d1d1f] mb-1">Terminal Gerbang Masuk</h2>
               <span class="inline-block text-xs font-semibold text-emerald-700 uppercase tracking-wider mb-3">
-                Kios Mandiri Jalur Masuk Pengendara
+                Kios Mandiri Jalur Masuk Khusus Member
               </span>
               <p class="apple-body text-[14px] text-[#424245] leading-relaxed mb-6">
                 Buka antarmuka kios mandiri untuk jalur masuk kendaraan member. Beroperasi secara otomatis 24 jam tanpa memerlukan login operator petugas.
@@ -308,29 +308,213 @@
               </div>
             </div>
 
-            <!-- KIOSK GATE-IN ACTION BUTTON (TANPA KETERANGAN PUBLIK) -->
+            <!-- KIOSK GATE-IN ACTION BUTTON (DILINDUNGI PASSWORD 1234) -->
             <div class="mt-6 pt-4 border-t border-emerald-500/20">
-              <NuxtLink
-                to="/kios-gatein"
-                class="apple-btn w-full h-12 py-3 px-5 rounded-2xl bg-gradient-to-b from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white font-semibold text-[15px] shadow-[0_10px_25px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2.5 border-t border-white/25 group"
+              <button
+                type="button"
+                @click="openKioskModal"
+                class="apple-btn w-full h-12 py-3 px-5 rounded-2xl bg-gradient-to-b from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white font-semibold text-[15px] shadow-[0_10px_25px_rgba(16,185,129,0.3)] flex items-center justify-center gap-2.5 border-t border-white/25 group transition-all"
               >
-                <span class="material-symbols-outlined text-[20px]">sensors</span>
+                <span class="material-symbols-outlined text-[20px]">lock</span>
                 <span>Buka Kios Gate-In</span>
                 <span class="material-symbols-outlined text-[20px] transition-transform duration-200 group-hover:translate-x-1">arrow_forward</span>
-              </NuxtLink>
+              </button>
             </div>
           </div>
 
         </div>
       </div>
     </main>
+
+    <!-- OVERLAY MODAL: Password Otorisasi Kios Gate-In -->
+    <div
+      v-if="showKioskModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+    >
+      <div class="w-full max-w-sm bg-white text-[#1d1d1f] rounded-[28px] shadow-2xl overflow-hidden border border-black/[0.08] relative">
+        <!-- Close Button -->
+        <button
+          @click="closeKioskModal"
+          class="apple-btn absolute top-4 right-4 text-[#86868b] hover:text-[#1d1d1f] p-1.5 rounded-full hover:bg-black/[0.05] transition-colors"
+          title="Tutup Modal"
+        >
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+
+        <div class="p-6 sm:p-7">
+          <!-- Icon Badge -->
+          <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-[0_8px_20px_rgba(16,185,129,0.3)]">
+            <span class="material-symbols-outlined text-3xl">lock</span>
+          </div>
+
+          <h3 class="text-center font-extrabold text-lg text-[#1d1d1f] mb-1">
+            Otorisasi Akses Kios Gate-In
+          </h3>
+          <p class="text-center text-xs text-[#6e6e73] mb-4 leading-relaxed">
+            Akses terminal mandiri gerbang masuk dilindungi kata sandi. Masukkan sandi petugas untuk membuka.
+          </p>
+
+          <!-- Quick Fill Demo Shortcut -->
+          <div class="mb-4 flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/90 text-emerald-950 text-xs shadow-2xs">
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-emerald-600 text-[18px]">key</span>
+              <span>Sandi Default: <strong class="font-mono-metric font-extrabold text-emerald-700">1234</strong></span>
+            </div>
+            <button
+              type="button"
+              @click="kioskPassword = '1234'; kioskError = ''"
+              class="apple-btn text-[11px] font-bold text-emerald-700 hover:text-emerald-900 bg-white px-2.5 py-1 rounded-lg border border-emerald-300 shadow-2xs"
+            >
+              Isi 1234
+            </button>
+          </div>
+
+          <!-- Form -->
+          <form @submit.prevent="submitKioskPassword" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-[#1d1d1f] mb-1.5">
+                Kata Sandi / PIN Kios
+              </label>
+              <div class="relative flex items-center">
+                <span class="material-symbols-outlined absolute left-3.5 text-[#86868b] text-[20px] pointer-events-none">password</span>
+                <input
+                  v-model="kioskPassword"
+                  :type="showKioskPass ? 'text' : 'password'"
+                  placeholder="Ketik sandi (cth: 1234)..."
+                  required
+                  autofocus
+                  class="w-full h-11 pl-11 pr-11 rounded-xl bg-black/[0.03] focus:bg-white border border-black/[0.1] focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 text-sm font-mono-metric text-[#1d1d1f] focus:outline-none transition-all"
+                />
+                <button
+                  type="button"
+                  @click="showKioskPass = !showKioskPass"
+                  class="apple-btn absolute right-3 text-[#86868b] hover:text-[#1d1d1f] p-1 rounded-lg"
+                >
+                  <span class="material-symbols-outlined text-[18px]">{{ showKioskPass ? 'visibility_off' : 'visibility' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Numeric Keypad (Untuk Layar Sentuh / Kemudahan Pengujian) -->
+            <div class="grid grid-cols-3 gap-1.5 max-w-[220px] mx-auto pt-1">
+              <button
+                v-for="digit in [1, 2, 3, 4, 5, 6, 7, 8, 9]"
+                :key="digit"
+                type="button"
+                @click="appendKioskDigit(digit)"
+                class="h-9 rounded-xl bg-black/[0.03] hover:bg-black/[0.06] active:scale-95 text-sm font-bold text-[#1d1d1f] transition-all font-mono-metric"
+              >
+                {{ digit }}
+              </button>
+              <button
+                type="button"
+                @click="clearKioskPass"
+                class="h-9 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] active:scale-95 text-[#6e6e73] font-bold text-xs"
+              >
+                C
+              </button>
+              <button
+                type="button"
+                @click="appendKioskDigit(0)"
+                class="h-9 rounded-xl bg-black/[0.03] hover:bg-black/[0.06] active:scale-95 text-sm font-bold text-[#1d1d1f] font-mono-metric"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                @click="backspaceKioskDigit"
+                class="h-9 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] active:scale-95 text-[#6e6e73] font-bold text-xs"
+              >
+                ⌫
+              </button>
+            </div>
+
+            <!-- Error Banner -->
+            <div v-if="kioskError" class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+              <span class="material-symbols-outlined text-rose-600 text-[18px] shrink-0">error</span>
+              <span>{{ kioskError }}</span>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-2.5 pt-2">
+              <button
+                type="button"
+                @click="closeKioskModal"
+                class="apple-btn flex-1 h-11 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] text-[#1d1d1f] text-xs font-semibold"
+              >
+                Batal
+              </button>
+              <button
+                type="submit"
+                :disabled="isKioskVerifying || !kioskPassword"
+                class="apple-btn flex-1 h-11 rounded-xl bg-gradient-to-b from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                <span v-if="isKioskVerifying" class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+                <span>{{ isKioskVerifying ? 'Memverifikasi...' : 'Buka Kios ➜' }}</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 const route = useRoute()
 const router = useRouter()
-const { currentUser, isLoggedIn, login, logout } = useApi()
+const { currentUser, isLoggedIn, login, logout, verifyKioskAccess } = useApi()
+
+// Kiosk Gate-In Access State & Handlers
+const showKioskModal = ref(false)
+const kioskPassword = ref('')
+const showKioskPass = ref(false)
+const isKioskVerifying = ref(false)
+const kioskError = ref('')
+
+const openKioskModal = () => {
+  kioskPassword.value = ''
+  kioskError.value = ''
+  showKioskModal.value = true
+}
+
+const closeKioskModal = () => {
+  showKioskModal.value = false
+  kioskPassword.value = ''
+  kioskError.value = ''
+}
+
+const appendKioskDigit = (d: number) => {
+  kioskPassword.value += d.toString()
+  kioskError.value = ''
+}
+
+const backspaceKioskDigit = () => {
+  kioskPassword.value = kioskPassword.value.slice(0, -1)
+}
+
+const clearKioskPass = () => {
+  kioskPassword.value = ''
+}
+
+const submitKioskPassword = async () => {
+  if (!kioskPassword.value) return
+  isKioskVerifying.value = true
+  kioskError.value = ''
+  try {
+    const res: any = await verifyKioskAccess(kioskPassword.value)
+    if (res?.success) {
+      closeKioskModal()
+      router.push('/kios-gatein')
+    } else {
+      kioskError.value = res?.message || 'Kata sandi kios salah! Masukkan password 1234.'
+    }
+  } catch (err: any) {
+    kioskError.value = err?.data?.message || 'Kata sandi kios salah! Masukkan password 1234.'
+  } finally {
+    isKioskVerifying.value = false
+  }
+}
 
 const form = reactive({
   username: 'admin',

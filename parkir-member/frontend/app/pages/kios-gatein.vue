@@ -17,7 +17,7 @@
             <span class="font-extrabold text-[15px] tracking-tight text-[#1d1d1f]">GATE-IN 01</span>
             <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-800 font-mono-metric">JALUR MASUK</span>
           </div>
-          <span class="text-[11px] text-[#86868b] hidden sm:block">Kios Mandiri Gerbang Masuk Member & Tamu</span>
+          <span class="text-[11px] text-[#86868b] hidden sm:block">Kios Mandiri Gerbang Masuk Khusus Member</span>
         </div>
       </div>
 
@@ -37,19 +37,32 @@
           <span>{{ isBarrierOpen ? `PALANG BUKA (${autoCloseTimer}s)` : 'PALANG TERTUTUP' }}</span>
         </div>
 
-        <!-- Exit / Return to Portal Button (Discreet) -->
-        <NuxtLink
-          to="/"
-          class="apple-btn text-xs font-semibold px-3 py-1.5 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] text-[#1d1d1f] flex items-center gap-1 border border-black/[0.06] transition-all"
-          title="Kembali ke Portal Login / Menu Utama"
+        <!-- Lock Kiosk Button -->
+        <button
+          type="button"
+          @click="lockKioskNow"
+          class="apple-btn text-xs font-semibold px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 flex items-center gap-1 border border-amber-200 transition-all shadow-2xs"
+          title="Kunci Layar Kios Mandiri"
+        >
+          <span class="material-symbols-outlined text-[15px] text-amber-600">lock</span>
+          <span class="hidden sm:inline">Kunci Kios</span>
+        </button>
+
+        <!-- Exit / Return to Portal Button (Protected with Password) -->
+        <button
+          type="button"
+          @click="openPortalModal"
+          class="apple-btn text-xs font-semibold px-3 py-1.5 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] text-[#1d1d1f] flex items-center gap-1.5 border border-black/[0.06] transition-all"
+          title="Kembali ke Portal Login / Menu Utama (Memerlukan Password 1234)"
         >
           <span class="material-symbols-outlined text-[16px]">arrow_back</span>
           <span class="hidden sm:inline">Portal</span>
-        </NuxtLink>
+          <span class="material-symbols-outlined text-[13px] text-[#86868b]">lock</span>
+        </button>
       </div>
     </header>
 
-    <!-- MAIN KIOSK VIEWPORT (POLOS & FOKUS PADA 2 PILIHAN MASUK) -->
+    <!-- MAIN KIOSK VIEWPORT (FOKUS SCAN QR MEMBER) -->
     <main class="w-full flex-1 max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-between relative z-10">
       
       <!-- OUTDOOR LED SIGNAGE DISPLAY BANNER -->
@@ -63,139 +76,15 @@
         </div>
       </div>
 
-      <!-- TWO PRIMARY ENTRY MODES (SPLIT 50/50: TOMBOL MASUK vs SCAN MEMBER) -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch mb-6">
-        
-        <!-- ============================================================= -->
-        <!-- OPSI 1: PENCET TOMBOL MASUK (PENGUNJUNG UMUM / TIKET PARKIR) -->
-        <!-- ============================================================= -->
-        <div class="apple-glass-card rounded-[28px] p-6 sm:p-8 bg-white border border-black/[0.06] shadow-sm flex flex-col justify-between relative overflow-hidden">
-          
-          <div>
-            <!-- Card Header -->
-            <div class="flex items-center justify-between mb-4">
-              <span class="px-3 py-1 rounded-full bg-blue-500/10 text-[#0071e3] text-xs font-bold border border-blue-500/20">
-                OPSI 1 • PENGUNJUNG UMUM
-              </span>
-              <span class="text-xs text-[#86868b] font-medium">Karcis Parkir</span>
-            </div>
-
-            <h2 class="apple-title text-2xl font-extrabold text-[#1d1d1f] mb-1">Pencet Tombol Masuk</h2>
-            <p class="apple-body text-xs sm:text-[13px] text-[#6e6e73] mb-5">
-              Untuk pengendara atau pengunjung tanpa kartu member. Tekan tombol di bawah untuk mencetak tiket parkir otomatis.
-            </p>
-
-            <!-- Vehicle Type Selector Pill -->
-            <div class="mb-6 p-1 rounded-xl bg-black/[0.04] border border-black/[0.04] grid grid-cols-2 gap-1 text-xs font-bold max-w-xs mx-auto">
-              <button
-                type="button"
-                @click="selectedVehicleType = 'mobil'"
-                class="apple-btn py-1.5 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5"
-                :class="selectedVehicleType === 'mobil' ? 'bg-white text-[#0071e3] shadow-xs' : 'text-[#6e6e73] hover:text-[#1d1d1f]'"
-              >
-                <span class="material-symbols-outlined text-[16px]">directions_car</span>
-                <span>Mobil</span>
-              </button>
-              <button
-                type="button"
-                @click="selectedVehicleType = 'motor'"
-                class="apple-btn py-1.5 px-3 rounded-lg transition-all flex items-center justify-center gap-1.5"
-                :class="selectedVehicleType === 'motor' ? 'bg-white text-[#0071e3] shadow-xs' : 'text-[#6e6e73] hover:text-[#1d1d1f]'"
-              >
-                <span class="material-symbols-outlined text-[16px]">two_wheeler</span>
-                <span>Motor</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Dynamic Middle: Push Button OR Virtual Issued Ticket -->
-          <div class="my-auto py-4">
-            
-            <!-- STATE A: Normal Standby Push Button -->
-            <div v-if="gateState !== 'tiket_umum'" class="text-center">
-              <div class="relative inline-block">
-                <!-- Glowing Pulse Ring -->
-                <div class="absolute -inset-4 rounded-full bg-emerald-500/20 blur-xl animate-pulse pointer-events-none"></div>
-
-                <!-- Giant Tactile Push Button -->
-                <button
-                  type="button"
-                  @click="handleTombolMasuk"
-                  :disabled="isLoading || isBarrierOpen"
-                  class="apple-btn w-44 h-44 sm:w-48 sm:h-48 rounded-full bg-gradient-to-b from-[#10b981] via-[#059669] to-[#047857] hover:from-[#059669] hover:to-[#047857] active:scale-95 text-white shadow-[0_16px_40px_rgba(16,185,129,0.35)] flex flex-col items-center justify-center gap-2 border-4 border-white/50 ring-8 ring-emerald-500/15 disabled:opacity-50 disabled:pointer-events-none mx-auto transition-transform duration-200 group cursor-pointer"
-                >
-                  <span class="material-symbols-outlined text-5xl sm:text-6xl group-hover:scale-110 transition-transform">touch_app</span>
-                  <span class="font-extrabold text-sm sm:text-base tracking-wide uppercase">PENCET DI SINI</span>
-                  <span class="text-[10px] font-semibold opacity-90">Ambil Tiket Masuk</span>
-                </button>
-              </div>
-
-              <p class="text-[11px] text-[#86868b] mt-4">
-                Tekan tombol untuk mengeluarkan struk tiket dan membuka palang
-              </p>
-            </div>
-
-            <!-- STATE B: Ticket Printed (Animasi Tiket Keluar) -->
-            <div v-else-if="ticketIssued" class="animate-in fade-in zoom-in-95 duration-300">
-              <div class="bg-white border-2 border-dashed border-emerald-500/50 rounded-2xl p-5 shadow-lg max-w-sm mx-auto text-left relative overflow-hidden">
-                <!-- Ticket Badge -->
-                <div class="flex items-center justify-between border-b border-black/[0.08] pb-3 mb-3">
-                  <div class="flex items-center gap-2">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
-                    <span class="font-extrabold text-xs text-[#1d1d1f] uppercase tracking-wider">TIKET PARKIR UMUM</span>
-                  </div>
-                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 font-mono-metric">{{ ticketIssued.jenis_kendaraan }}</span>
-                </div>
-
-                <!-- Ticket Details -->
-                <div class="space-y-1.5 text-xs text-[#424245] mb-4">
-                  <div class="flex justify-between">
-                    <span class="text-[#86868b]">No. Tiket:</span>
-                    <span class="font-mono-metric font-black text-slate-900 text-sm">{{ ticketIssued.no_tiket }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-[#86868b]">Plat Terdeteksi:</span>
-                    <span class="font-mono-metric font-bold text-slate-900">{{ ticketIssued.no_plat }}</span>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-[#86868b]">Waktu Masuk:</span>
-                    <span class="font-mono-metric font-semibold text-slate-900">{{ ticketIssued.waktu_masuk }}</span>
-                  </div>
-                </div>
-
-                <!-- Simulated Barcode Graphic -->
-                <div class="h-10 w-full bg-slate-900 rounded flex items-center justify-center text-white/80 font-mono-metric text-xs tracking-widest mb-3">
-                  ||| | |||| | ||| || |||| |
-                </div>
-
-                <div class="p-2.5 rounded-xl bg-emerald-500 text-white font-extrabold text-center text-xs flex items-center justify-center gap-1.5 shadow-sm">
-                  <span class="material-symbols-outlined text-[18px]">check_circle</span>
-                  <span>TIKET DIAMBIL — SILAKAN MASUK</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          <!-- Card Footer Note -->
-          <div class="pt-4 border-t border-black/[0.06] text-center">
-            <span class="text-[11px] text-[#86868b]">
-              Simpan tiket parkir ini dengan baik untuk ditunjukkan saat pembayaran di pos keluar.
-            </span>
-          </div>
-
-        </div>
-
-        <!-- ============================================================= -->
-        <!-- OPSI 2: SCAN QR CODE MEMBER (KHUSUS MEMBER BERLANGGANAN) -->
-        <!-- ============================================================= -->
+      <!-- SCAN QR CODE MEMBER (KHUSUS MEMBER BERLANGGANAN) -->
+      <div class="w-full max-w-xl mx-auto mb-6">
         <div class="apple-glass-card rounded-[28px] p-6 sm:p-8 bg-white border border-black/[0.06] shadow-sm flex flex-col justify-between relative overflow-hidden">
           
           <div>
             <!-- Card Header -->
             <div class="flex items-center justify-between mb-4">
               <span class="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-800 text-xs font-bold border border-emerald-500/20">
-                OPSI 2 • KHUSUS MEMBER
+                KHUSUS MEMBER
               </span>
               <span class="text-xs text-[#86868b] font-medium">Bebas Parkir</span>
             </div>
@@ -355,26 +244,26 @@
               </div>
             </div>
 
-            <!-- STATE D: Tidak Dikenal -->
-            <div v-else-if="gateState === 'tidak_dikenal'" class="bg-slate-100 border-2 border-slate-300 rounded-2xl p-5 shadow-sm text-left animate-in fade-in duration-300 max-w-sm mx-auto">
+            <!-- STATE D: Tidak Dikenal / Bukan Member -->
+            <div v-else-if="gateState === 'tidak_dikenal'" class="bg-rose-50 border-2 border-rose-400 rounded-2xl p-5 shadow-sm text-left animate-in fade-in duration-300 max-w-sm mx-auto">
               <div class="flex items-center gap-2.5 mb-2">
-                <div class="w-10 h-10 rounded-xl bg-slate-300 text-slate-700 flex items-center justify-center">
-                  <span class="material-symbols-outlined text-2xl">help</span>
+                <div class="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center">
+                  <span class="material-symbols-outlined text-2xl">block</span>
                 </div>
                 <div>
-                  <span class="px-2 py-0.5 rounded-full bg-slate-200 text-slate-800 font-bold text-[10px]">TIDAK TERDAFTAR</span>
-                  <h3 class="text-sm font-bold text-slate-900">QR Belum Ada di Sistem</h3>
+                  <span class="px-2 py-0.5 rounded-full bg-rose-200 text-rose-900 font-bold text-[10px]">BUKAN MEMBER (DITOLAK)</span>
+                  <h3 class="text-sm font-bold text-slate-900">Akses Ditolak — Khusus Member</h3>
                 </div>
               </div>
-              <p class="text-xs text-slate-600 mb-3">
-                Kode QR tidak terdaftar sebagai member. Silakan tekan tombol masuk (tiket umum) di sebelah kiri.
+              <p class="text-xs text-rose-800 mb-3">
+                Gerbang ini 100% khusus kendaraan member berlangganan (tidak melayani parkir umum/non-member). Silakan mendaftar di loket kasir/administrasi.
               </p>
               <button
                 type="button"
                 @click="triggerIntercom"
-                class="w-full py-2 px-3 rounded-xl bg-white border border-slate-300 text-slate-800 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs"
+                class="w-full py-2 px-3 rounded-xl bg-white border border-rose-200 text-rose-900 font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs hover:bg-rose-50"
               >
-                <span class="material-symbols-outlined text-[16px] text-brand-600">support_agent</span>
+                <span class="material-symbols-outlined text-[16px] text-rose-600">support_agent</span>
                 <span>Bantuan Interkom Petugas</span>
               </button>
             </div>
@@ -606,11 +495,298 @@
       </div>
     </div>
 
+    <!-- OVERLAY MODAL: Otorisasi Password Keluar Kios ke Portal (Password: 1234) -->
+    <div
+      v-if="showPortalModal"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200"
+      @click.self="closePortalModal"
+    >
+      <div class="w-full max-w-sm bg-white text-[#1d1d1f] rounded-[28px] shadow-2xl overflow-hidden border border-black/[0.08] animate-in zoom-in-95 duration-200">
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-black/[0.06] flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-[#0071e3]/10 text-[#0071e3] flex items-center justify-center">
+              <span class="material-symbols-outlined text-xl">lock_person</span>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-sm text-[#1d1d1f]">Otorisasi Keluar Kios</h3>
+              <p class="text-[10px] text-[#86868b]">Akses kembali ke Portal Petugas</p>
+            </div>
+          </div>
+          <button @click="closePortalModal" class="text-[#86868b] hover:text-[#1d1d1f] p-1 rounded-lg transition-colors">
+            <span class="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6">
+          <p class="text-xs text-[#6e6e73] mb-4 text-center">
+            Kios ini dalam mode mandiri terkunci. Masukkan password pengawas untuk kembali ke Portal.
+          </p>
+
+          <!-- 4-Digit Display Indicator -->
+          <div class="flex items-center justify-center gap-2.5 mb-5">
+            <div
+              v-for="i in 4"
+              :key="i"
+              class="w-12 h-12 rounded-2xl flex items-center justify-center text-xl font-bold font-mono-metric transition-all"
+              :class="portalPinSuccess 
+                ? 'bg-emerald-500/10 border-2 border-emerald-500 text-emerald-600 scale-105'
+                : (portalPin.length >= i 
+                  ? 'bg-[#0071e3]/10 border-2 border-[#0071e3] text-[#0071e3] scale-105' 
+                  : (portalPin.length === i - 1 
+                    ? 'border-2 border-[#0071e3]/60 bg-white ring-2 ring-[#0071e3]/20' 
+                    : 'bg-black/[0.03] border border-black/[0.08] text-slate-400'))"
+            >
+              {{ portalPin.length >= i ? (showPasswordPlain ? portalPin[i-1] : '●') : '' }}
+            </div>
+          </div>
+
+          <!-- On-Screen Numeric Keypad -->
+          <div class="grid grid-cols-3 gap-2 max-w-[240px] mx-auto mb-4">
+            <button
+              v-for="digit in [1, 2, 3, 4, 5, 6, 7, 8, 9]"
+              :key="digit"
+              type="button"
+              @click="appendPortalPin(digit)"
+              :disabled="portalPinSuccess"
+              class="h-11 rounded-xl bg-black/[0.03] hover:bg-black/[0.06] active:scale-95 text-base font-bold text-[#1d1d1f] transition-all disabled:opacity-50"
+            >
+              {{ digit }}
+            </button>
+            <button
+              type="button"
+              @click="backspacePortalPin"
+              :disabled="portalPinSuccess"
+              class="h-11 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] active:scale-95 text-[#6e6e73] font-bold text-xs disabled:opacity-50"
+            >
+              ⌫
+            </button>
+            <button
+              type="button"
+              @click="appendPortalPin(0)"
+              :disabled="portalPinSuccess"
+              class="h-11 rounded-xl bg-black/[0.03] hover:bg-black/[0.06] active:scale-95 text-base font-bold text-[#1d1d1f] disabled:opacity-50"
+            >
+              0
+            </button>
+            <button
+              type="button"
+              @click="clearPortalPin"
+              :disabled="portalPinSuccess"
+              class="h-11 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] active:scale-95 text-[#6e6e73] font-bold text-xs disabled:opacity-50"
+            >
+              C
+            </button>
+          </div>
+
+          <!-- Helper toggle show/hide & Hint -->
+          <div class="flex items-center justify-between text-[11px] text-[#86868b] px-2 mb-3">
+            <span class="font-mono-metric">Password: <strong class="text-[#0071e3]">1234</strong></span>
+            <button
+              type="button"
+              @click="showPasswordPlain = !showPasswordPlain"
+              class="text-[#0071e3] hover:underline font-medium text-[11px]"
+            >
+              {{ showPasswordPlain ? 'Sembunyikan' : 'Lihat Angka' }}
+            </button>
+          </div>
+
+          <!-- Feedback Status Alerts -->
+          <div v-if="portalPinError" class="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs text-center mb-2 flex items-center justify-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">error</span>
+            <span>{{ portalPinError }}</span>
+          </div>
+          <div v-if="portalPinSuccess" class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs text-center mb-2 flex items-center justify-center gap-1.5 font-bold">
+            <span class="material-symbols-outlined text-[16px]">check_circle</span>
+            <span>Password Benar! Mengalihkan ke Portal...</span>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="bg-black/[0.02] px-6 py-3.5 border-t border-black/[0.06] flex items-center justify-between">
+          <button
+            type="button"
+            @click="closePortalModal"
+            class="px-4 py-2 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] text-[#1d1d1f] text-xs font-semibold"
+          >
+            Batal
+          </button>
+          <button
+            type="button"
+            @click="submitPortalPassword"
+            :disabled="portalPin.length < 4 || portalPinSuccess"
+            class="px-4 py-2 rounded-xl bg-[#0071e3] hover:bg-[#0077ed] text-white text-xs font-bold shadow-sm disabled:opacity-50 transition-all flex items-center gap-1.5"
+          >
+            <span>Buka Portal</span>
+            <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL-SCREEN LOCK OVERLAY: Akses Kios Terkunci (Memerlukan Password 1234) -->
+    <div
+      v-if="!isKioskUnlocked"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200"
+    >
+      <div class="w-full max-w-sm bg-white text-[#1d1d1f] rounded-[28px] shadow-2xl overflow-hidden border border-black/[0.08] relative">
+        <div class="p-6 sm:p-7">
+          <div class="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-600 flex items-center justify-center text-white shadow-[0_8px_20px_rgba(16,185,129,0.3)]">
+            <span class="material-symbols-outlined text-3xl">lock</span>
+          </div>
+
+          <h3 class="text-center font-extrabold text-lg text-[#1d1d1f] mb-1">
+            Terminal Kios Terkunci
+          </h3>
+          <p class="text-center text-xs text-[#6e6e73] mb-4 leading-relaxed">
+            Kios Mandiri Gerbang Masuk memerlukan kata sandi petugas operasional untuk membuka akses.
+          </p>
+
+          <!-- Quick Fill Demo Shortcut -->
+          <div class="mb-4 flex items-center justify-between p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/90 text-emerald-950 text-xs shadow-2xs">
+            <div class="flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-emerald-600 text-[18px]">key</span>
+              <span>Sandi Default: <strong class="font-mono-metric font-extrabold text-emerald-700">1234</strong></span>
+            </div>
+            <button
+              type="button"
+              @click="unlockPassword = '1234'; unlockError = ''"
+              class="apple-btn text-[11px] font-bold text-emerald-700 hover:text-emerald-900 bg-white px-2.5 py-1 rounded-lg border border-emerald-300 shadow-2xs"
+            >
+              Isi 1234
+            </button>
+          </div>
+
+          <!-- Form -->
+          <form @submit.prevent="submitUnlockPassword" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-[#1d1d1f] mb-1.5">
+                Kata Sandi / PIN Kios
+              </label>
+              <div class="relative flex items-center">
+                <span class="material-symbols-outlined absolute left-3.5 text-[#86868b] text-[20px] pointer-events-none">password</span>
+                <input
+                  v-model="unlockPassword"
+                  :type="showUnlockPass ? 'text' : 'password'"
+                  placeholder="Ketik password (cth: 1234)..."
+                  required
+                  autofocus
+                  class="w-full h-11 pl-11 pr-11 rounded-xl bg-black/[0.03] focus:bg-white border border-black/[0.1] focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 text-sm font-mono-metric text-[#1d1d1f] focus:outline-none transition-all"
+                />
+                <button
+                  type="button"
+                  @click="showUnlockPass = !showUnlockPass"
+                  class="apple-btn absolute right-3 text-[#86868b] hover:text-[#1d1d1f] p-1 rounded-lg"
+                >
+                  <span class="material-symbols-outlined text-[18px]">{{ showUnlockPass ? 'visibility_off' : 'visibility' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Keypad -->
+            <div class="grid grid-cols-3 gap-1.5 max-w-[220px] mx-auto pt-1">
+              <button
+                v-for="digit in [1, 2, 3, 4, 5, 6, 7, 8, 9]"
+                :key="digit"
+                type="button"
+                @click="appendUnlockDigit(digit)"
+                class="h-9 rounded-xl bg-black/[0.03] hover:bg-black/[0.06] active:scale-95 text-sm font-bold text-[#1d1d1f] transition-all font-mono-metric"
+              >
+                {{ digit }}
+              </button>
+              <button
+                type="button"
+                @click="unlockPassword = ''"
+                class="h-9 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] active:scale-95 text-[#6e6e73] font-bold text-xs"
+              >
+                C
+              </button>
+              <button
+                type="button"
+                @click="appendUnlockDigit(0)"
+                class="h-9 rounded-xl bg-black/[0.03] hover:bg-black/[0.06] active:scale-95 text-sm font-bold text-[#1d1d1f] font-mono-metric"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                @click="unlockPassword = unlockPassword.slice(0, -1)"
+                class="h-9 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] active:scale-95 text-[#6e6e73] font-bold text-xs"
+              >
+                ⌫
+              </button>
+            </div>
+
+            <!-- Error Banner -->
+            <div v-if="unlockError" class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
+              <span class="material-symbols-outlined text-rose-600 text-[18px] shrink-0">error</span>
+              <span>{{ unlockError }}</span>
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-2.5 pt-2">
+              <NuxtLink
+                to="/"
+                class="apple-btn flex-1 h-11 rounded-xl bg-black/[0.04] hover:bg-black/[0.08] text-[#1d1d1f] text-xs font-semibold flex items-center justify-center gap-1"
+              >
+                <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                <span>Ke Portal</span>
+              </NuxtLink>
+              <button
+                type="submit"
+                :disabled="isUnlocking || !unlockPassword"
+                class="apple-btn flex-1 h-11 rounded-xl bg-gradient-to-b from-[#10b981] to-[#059669] hover:from-[#059669] hover:to-[#047857] text-white text-xs font-bold shadow-md flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                <span v-if="isUnlocking" class="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
+                <span>{{ isUnlocking ? 'Membuka...' : 'Buka Kios ➜' }}</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
-const { gateCheckIn, gateTiketMasuk, gateOverrideIn } = useApi()
+const { gateCheckIn, gateOverrideIn, isKioskUnlocked, verifyKioskAccess, lockKiosk } = useApi()
+
+// Kiosk Screen Lock/Unlock State
+const unlockPassword = ref('')
+const showUnlockPass = ref(false)
+const isUnlocking = ref(false)
+const unlockError = ref('')
+
+const appendUnlockDigit = (d: number) => {
+  unlockPassword.value += d.toString()
+  unlockError.value = ''
+}
+
+const submitUnlockPassword = async () => {
+  if (!unlockPassword.value) return
+  isUnlocking.value = true
+  unlockError.value = ''
+  try {
+    const res: any = await verifyKioskAccess(unlockPassword.value)
+    if (res?.success) {
+      unlockPassword.value = ''
+    } else {
+      unlockError.value = res?.message || 'Password salah! Masukkan password 1234.'
+    }
+  } catch (err: any) {
+    unlockError.value = err?.data?.message || 'Password salah! Masukkan password 1234.'
+  } finally {
+    isUnlocking.value = false
+  }
+}
+
+const lockKioskNow = () => {
+  lockKiosk()
+  unlockPassword.value = ''
+  unlockError.value = ''
+}
 
 // Clock
 const currentTime = ref('14:00:00 WIB')
@@ -620,11 +796,17 @@ let clockInterval: any = null
 onMounted(() => {
   updateClock()
   clockInterval = setInterval(updateClock, 1000)
+  if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', handlePortalKeydown)
+  }
 })
 
 onUnmounted(() => {
   if (clockInterval) clearInterval(clockInterval)
   if (autoCloseInterval) clearInterval(autoCloseInterval)
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('keydown', handlePortalKeydown)
+  }
 })
 
 const updateClock = () => {
@@ -633,8 +815,8 @@ const updateClock = () => {
   currentDate.value = d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-// Gate State: 'idle' | 'tiket_umum' | 'aktif' | 'kadaluarsa' | 'tidak_dikenal' | 'bypass_pin'
-const gateState = ref<'idle' | 'tiket_umum' | 'aktif' | 'kadaluarsa' | 'tidak_dikenal' | 'bypass_pin'>('idle')
+// Gate State: 'idle' | 'aktif' | 'kadaluarsa' | 'tidak_dikenal' | 'bypass_pin'
+const gateState = ref<'idle' | 'aktif' | 'kadaluarsa' | 'tidak_dikenal' | 'bypass_pin'>('idle')
 const isBarrierOpen = ref(false)
 const autoCloseTimer = ref(5)
 let autoCloseInterval: any = null
@@ -642,26 +824,20 @@ const isLoading = ref(false)
 const currentDetectedPlate = ref('B 1234 ABC')
 const intercomActive = ref(false)
 
-// Ticket state
-const selectedVehicleType = ref<'mobil' | 'motor'>('mobil')
-const ticketIssued = ref<any>(null)
-
 // Member & PIN state
 const gateResult = ref<any>({})
 const pinSuccessData = ref<any>({})
 const customQrInput = ref('')
 
 const ledDisplayText = computed(() => {
-  if (gateState.value === 'tiket_umum') return '[ TIKET PARKIR DICETAK : SILAKAN MASUK ]'
   if (gateState.value === 'aktif') return '[ MEMBER AKTIF : SILAKAN MASUK ]'
   if (gateState.value === 'kadaluarsa') return '[ QR KADALUARSA : HUBUNGI KASIR ]'
   if (gateState.value === 'tidak_dikenal') return '[ QR CODE TIDAK TERDAFTAR ]'
   if (gateState.value === 'bypass_pin') return '[ OVERRIDE PETUGAS : DIIZINKAN ]'
-  return '[ STANDBY : TEKAN TOMBOL MASUK ATAU SCAN QR MEMBER ]'
+  return '[ STANDBY : SILAKAN SCAN QR MEMBER ]'
 })
 
 const ledDisplayClass = computed(() => {
-  if (gateState.value === 'tiket_umum') return 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]'
   if (gateState.value === 'aktif') return 'text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]'
   if (gateState.value === 'kadaluarsa') return 'text-rose-500 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]'
   if (gateState.value === 'tidak_dikenal') return 'text-slate-400'
@@ -669,44 +845,7 @@ const ledDisplayClass = computed(() => {
   return 'text-emerald-400'
 })
 
-// Action 1: Handle Tombol Masuk (Pengunjung Biasa / Tiket)
-const handleTombolMasuk = async () => {
-  isLoading.value = true
-  const prefix = selectedVehicleType.value === 'motor' ? 'MTR' : 'MBL'
-  currentDetectedPlate.value = `B ${Math.floor(1000 + Math.random() * 9000)} ${prefix}`
-
-  try {
-    const res: any = await gateTiketMasuk(selectedVehicleType.value, 'GATE-IN 01', currentDetectedPlate.value)
-    if (res?.success) {
-      ticketIssued.value = res.data
-      gateState.value = 'tiket_umum'
-      openBarrier()
-    } else {
-      fallbackTicket()
-    }
-  } catch {
-    fallbackTicket()
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const fallbackTicket = () => {
-  const now = new Date()
-  const pad = (n: number) => n.toString().padStart(2, '0')
-  const ticketNo = `TKT-${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}-${Math.floor(1000 + Math.random() * 9000)}`
-  ticketIssued.value = {
-    no_tiket: ticketNo,
-    no_plat: currentDetectedPlate.value,
-    jenis_kendaraan: selectedVehicleType.value.toUpperCase(),
-    waktu_masuk: now.toLocaleTimeString('id-ID') + ' WIB',
-    tanggal: now.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })
-  }
-  gateState.value = 'tiket_umum'
-  openBarrier()
-}
-
-// Action 2: Simulate Scan QR Member
+// Action: Simulate Scan QR Member
 const simulateTap = async (identifier: string) => {
   if (!identifier) return
   isLoading.value = true
@@ -782,7 +921,6 @@ const closeBarrier = () => {
   setTimeout(() => {
     // Reset back to idle standby after barrier closes
     gateState.value = 'idle'
-    ticketIssued.value = null
   }, 1200)
 }
 
@@ -846,6 +984,85 @@ const submitPinOverride = async () => {
     pinError.value = err?.data?.message || 'PIN Petugas salah (Gunakan 998877 atau 123456)'
   } finally {
     isPinSubmitting.value = false
+  }
+}
+
+// ==========================================
+// Portal Exit Security Verification (Password: 1234)
+// ==========================================
+const showPortalModal = ref(false)
+const portalPin = ref('')
+const portalPinError = ref('')
+const portalPinSuccess = ref(false)
+const showPasswordPlain = ref(false)
+
+const openPortalModal = () => {
+  portalPin.value = ''
+  portalPinError.value = ''
+  portalPinSuccess.value = false
+  showPortalModal.value = true
+}
+
+const closePortalModal = () => {
+  showPortalModal.value = false
+  portalPin.value = ''
+  portalPinError.value = ''
+  portalPinSuccess.value = false
+}
+
+const appendPortalPin = (digit: number) => {
+  if (portalPinSuccess.value) return
+  if (portalPin.value.length < 4) {
+    portalPin.value += digit.toString()
+    portalPinError.value = ''
+    if (portalPin.value.length === 4) {
+      submitPortalPassword()
+    }
+  }
+}
+
+const backspacePortalPin = () => {
+  if (portalPinSuccess.value) return
+  portalPin.value = portalPin.value.slice(0, -1)
+  portalPinError.value = ''
+}
+
+const clearPortalPin = () => {
+  if (portalPinSuccess.value) return
+  portalPin.value = ''
+  portalPinError.value = ''
+}
+
+const submitPortalPassword = () => {
+  if (portalPinSuccess.value) return
+  if (portalPin.value === '1234') {
+    portalPinSuccess.value = true
+    portalPinError.value = ''
+    setTimeout(() => {
+      showPortalModal.value = false
+      lockKiosk()
+      navigateTo('/')
+    }, 600)
+  } else {
+    portalPinError.value = 'Password salah! Gunakan 1234'
+    setTimeout(() => {
+      if (!portalPinSuccess.value) {
+        portalPin.value = ''
+      }
+    }, 800)
+  }
+}
+
+const handlePortalKeydown = (e: KeyboardEvent) => {
+  if (!showPortalModal.value) return
+  if (e.key >= '0' && e.key <= '9') {
+    appendPortalPin(parseInt(e.key))
+  } else if (e.key === 'Backspace') {
+    backspacePortalPin()
+  } else if (e.key === 'Escape') {
+    closePortalModal()
+  } else if (e.key === 'Enter') {
+    submitPortalPassword()
   }
 }
 </script>

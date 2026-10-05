@@ -20,13 +20,24 @@
 
         <!-- Action Toolbar -->
         <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+          <!-- Button Kelola Akun (Admin, Kasir, Petugas) -->
+          <NuxtLink
+            to="/kelola-akun"
+            class="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/25 transition-all"
+            title="Kelola Akun Kasir, Admin, dan Petugas Operasional"
+          >
+            <span class="material-symbols-outlined text-[18px]">manage_accounts</span>
+            <span>Kelola Akun</span>
+            <span class="text-[9px] bg-white/20 px-1.5 py-0.2 rounded-full font-mono-metric">ADMIN</span>
+          </NuxtLink>
+
           <!-- Button Pengaturan Member (Admin Exclusive) -->
           <NuxtLink
             to="/member"
             class="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md shadow-purple-600/25 transition-all"
             title="Akses Pengaturan Master Data Member & Kartu QR"
           >
-            <span class="material-symbols-outlined text-[18px]">manage_accounts</span>
+            <span class="material-symbols-outlined text-[18px]">badge</span>
             <span>Pengaturan Member</span>
             <span class="text-[9px] bg-white/20 px-1.5 py-0.2 rounded-full font-mono-metric">ADMIN</span>
           </NuxtLink>

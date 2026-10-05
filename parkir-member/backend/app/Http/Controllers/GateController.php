@@ -46,14 +46,14 @@ class GateController extends Controller
                 'gerbang_masuk' => $gerbang,
                 'status_parkir' => 'ditolak',
                 'metode_masuk' => 'scan_qr',
-                'catatan_override' => 'QR Code Member tidak terdaftar dalam sistem',
+                'catatan_override' => 'Bukan Member: QR Code tidak terdaftar dalam sistem',
             ]);
 
             return response()->json([
                 'success' => false,
                 'status' => 'tidak_dikenal',
                 'palang' => 'tertutup',
-                'message' => 'QR Code Tidak Terdaftar. Silakan registrasi terlebih dahulu di loket kasir / menu kelola member.',
+                'message' => 'Akses Ditolak! Gerbang ini 100% khusus member terdaftar. Kendaraan non-member dilarang masuk.',
                 'data' => [
                     'identifier' => $id,
                     'timestamp' => Carbon::now()->format('H:i:s WIB'),
@@ -108,52 +108,13 @@ class GateController extends Controller
             'success' => true,
             'status' => 'aktif',
             'palang' => 'terbuka',
-            'message' => 'QR Code Terverifikasi! Palang terbuka, silakan masuk.',
+            'message' => 'QR Code Member Terverifikasi! Palang terbuka, silakan masuk.',
             'data' => [
                 'transaksi' => $transaksi,
                 'member' => $member,
                 'kendaraan' => $vehicle,
                 'sisa_hari' => $member->sisa_hari,
                 'tgl_kadaluarsa' => Carbon::parse($member->tgl_kadaluarsa)->format('d F Y'),
-            ],
-        ]);
-    }
-
-    /**
-     * Tombol Masuk / Cetak Tiket Parkir Tamu (Non-Member)
-     */
-    public function tiketMasuk(Request $request)
-    {
-        $gerbang = $request->input('gerbang_masuk', 'GATE-IN 01');
-        $jenis = strtolower($request->input('jenis_kendaraan', 'mobil'));
-        $suffix = $jenis === 'motor' ? 'MTR' : 'MBL';
-        $noPlat = strtoupper(trim($request->input('lpr_plate', 'B ' . rand(1000, 9999) . ' ' . $suffix)));
-        
-        $idParkir = 'TKT-' . date('Ymd') . '-' . str_pad(TransaksiParkir::count() + 1, 4, '0', STR_PAD_LEFT);
-
-        $transaksi = TransaksiParkir::create([
-            'id_parkir' => $idParkir,
-            'id_member' => null,
-            'no_plat' => $noPlat,
-            'waktu_masuk' => Carbon::now(),
-            'gerbang_masuk' => $gerbang,
-            'status_parkir' => 'masuk',
-            'metode_masuk' => 'tombol_tiket',
-            'biaya' => 0,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'status' => 'tiket_umum',
-            'palang' => 'terbuka',
-            'message' => 'Tiket parkir diterbitkan! Palang terbuka, silakan masuk.',
-            'data' => [
-                'transaksi' => $transaksi,
-                'no_tiket' => $idParkir,
-                'no_plat' => $noPlat,
-                'jenis_kendaraan' => strtoupper($jenis),
-                'waktu_masuk' => Carbon::now()->format('H:i:s \W\I\B'),
-                'tanggal' => Carbon::now()->format('d F Y'),
             ],
         ]);
     }
@@ -332,12 +293,75 @@ class GateController extends Controller
      */
     public function emergencyOpen(Request $request)
     {
+        $request->validate([
+            'password' => 'required',
+            'alasan' => 'required|string',
+        ]);
+
+        if (trim((string)$request->password) !== '1234') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Password darurat salah! Masukkan password 1234.',
+            ], 403);
+        }
+
+        $alasan = trim((string)$request->alasan);
+        if (empty($alasan)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Alasan pembukaan palang darurat wajib diisi.',
+            ], 422);
+        }
+
+        // Catat ke transaksi_parkir sebagai log darurat
+        try {
+            $idParkir = 'EMG-' . date('Ymd-His');
+            TransaksiParkir::create([
+                'id_parkir' => $idParkir,
+                'id_member' => null,
+                'no_plat' => 'DARURAT',
+                'waktu_masuk' => Carbon::now(),
+                'waktu_keluar' => Carbon::now(),
+                'gerbang_keluar' => $request->input('gerbang_keluar', 'GATE-OUT 01'),
+                'status_parkir' => 'darurat',
+                'metode_masuk' => 'manual_darurat',
+                'catatan_override' => 'Palang Darurat: ' . substr($alasan, 0, 230),
+                'biaya' => 0,
+            ]);
+        } catch (\Throwable $e) {
+            // Abaikan kegagalan database
+        }
+
         return response()->json([
             'success' => true,
             'palang' => 'terbuka_darurat',
             'message' => 'Palang darurat berhasil diaktifkan secara manual.',
+            'alasan' => $alasan,
             'timestamp' => Carbon::now()->format('H:i:s WIB'),
         ]);
+    }
+
+    /**
+     * Verify Kiosk Gate-In Access Password (e.g. 1234)
+     */
+    public function verifyKioskAccess(Request $request)
+    {
+        $request->validate([
+            'password' => 'required',
+        ]);
+
+        $password = trim((string)$request->password);
+        if (in_array($password, ['1234', '123456', 'admin123', '998877'])) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Otorisasi akses Kios Gate-In berhasil.',
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Kata sandi kios salah! Masukkan PIN/Password yang benar (Contoh: 1234).',
+        ], 403);
     }
 
     /**

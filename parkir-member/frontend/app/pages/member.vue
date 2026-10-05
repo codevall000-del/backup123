@@ -23,6 +23,16 @@
 
         <!-- Action Buttons -->
         <div class="flex flex-wrap items-center gap-2">
+          <!-- Button Ke Kelola Akun -->
+          <NuxtLink
+            to="/kelola-akun"
+            class="apple-btn px-3.5 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-900 text-xs font-bold flex items-center gap-1.5 shadow-xs transition-all"
+            title="Kelola Akun Kasir, Admin, dan Petugas"
+          >
+            <span class="material-symbols-outlined text-[18px] text-indigo-600">manage_accounts</span>
+            <span>Kelola Akun</span>
+          </NuxtLink>
+
           <!-- Button SOP Edukasi Pemahaman Login & Member -->
           <button
             type="button"
